@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="投資人生">
+<title>投資人生ゲーム</title>
+<meta name="description" content="人生にやってくるお金の出来事に、スワイプで答えるだけ。あなたの選択で、資産と街はどう育つ? 所要時間3分の無料ゲーム。">
+<!-- SNSでシェアされたときの表示 (OGP) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="投資人生ゲーム">
+<meta property="og:description" content="人生にやってくるお金の出来事に、スワイプで答えるだけ。あなたの選択で、資産と街はどう育つ?">
+<meta property="og:url" content="https://rincanvas-hash.github.io/invest-life-game/">
+<meta property="og:image" content="https://rincanvas-hash.github.io/invest-life-game/assets/ogp.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="投資人生ゲーム">
+<meta name="twitter:description" content="人生にやってくるお金の出来事に、スワイプで答えるだけ。あなたの選択で、資産と街はどう育つ?">
+<meta name="twitter:image" content="https://rincanvas-hash.github.io/invest-life-game/assets/ogp.jpg">
+<!-- ホーム画面アイコン -->
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="icon" type="image/png" href="assets/icon-180.png">
+<style>
+  :root {
+    --bg: #eaf0f8; --ink: #1d2a3d; --muted: #6f7f96;
+    --accent: #2fb69e; --gold: #d99a13; --red: #e5566b; --blue: #4f8ff7;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", "Segoe UI", sans-serif; overflow: hidden; }
+  #app { position: fixed; inset: 0; margin: 0 auto; max-width: 480px; display: flex; flex-direction: column;
+    background: linear-gradient(#f4f7fc, #e3eaf5); }
+
+  /* ---- 上部: ステータス + 3D ---- */
+  #hud { padding: max(10px, env(safe-area-inset-top)) 14px 6px; display: flex; justify-content: space-between; align-items: flex-end; z-index: 2; }
+  #hud .age { font-size: 13px; color: var(--muted); }
+  #hud .age b { font-size: 26px; color: var(--ink); }
+  #hud .assets { text-align: right; }
+  #hud .assets small { display: block; font-size: 11px; color: var(--muted); }
+  #hud .assets b { font-size: 24px; color: var(--gold); }
+  #meters { display: flex; gap: 10px; padding: 0 14px 8px; z-index: 2; }
+  .meter { flex: 1; font-size: 11px; color: var(--muted); }
+  .meter .bar { height: 6px; background: rgba(29,42,61,0.12); border-radius: 3px; margin-top: 3px; overflow: hidden; }
+  .meter .bar i { display: block; height: 100%; width: 50%; border-radius: 3px; transition: width .5s; }
+  .meter.happy i { background: #ff7fa8; } .meter.know i { background: var(--blue); } .meter.tsumi i { background: var(--accent); }
+  #town { flex: 0 0 38%; position: relative; min-height: 180px; margin: 0 12px; border-radius: 16px; overflow: hidden;
+    background: linear-gradient(#5b8fd6 0%, #8fb8e8 45%, #ffd9a8 100%); transition: background 1.6s; box-shadow: 0 8px 24px rgba(29,42,61,0.18); }
+  #town canvas { display: block; width: 100% !important; height: 100% !important; }
+  #townLabel { position: absolute; left: 10px; bottom: 8px; font-size: 12px; color: #fff; background: rgba(15,26,46,0.55); padding: 4px 8px; border-radius: 6px; }
+  #toast { position: absolute; left: 50%; top: 12px; transform: translateX(-50%) translateY(-20px); opacity: 0; background: rgba(255,255,255,0.95); color: var(--ink);
+    padding: 8px 14px; border-radius: 12px; font-size: 14px; font-weight: 700; white-space: nowrap; box-shadow: 0 6px 16px rgba(0,0,0,0.2); transition: all .35s; pointer-events: none; }
+  #toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .confetti { position: absolute; top: -12px; width: 8px; height: 12px; border-radius: 2px; animation: fall 1.5s ease-in forwards; pointer-events: none; }
+  @keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(260px) rotate(540deg); opacity: 0; } }
+
+  /* ---- 下部: カード ---- */
+  #deck { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 18px 14px; }
+  #hintL, #hintR { position: absolute; top: 44%; font-size: 12px; color: var(--muted); width: 64px; text-align: center; transition: color .2s, transform .2s; }
+  #hintL { left: 2px; } #hintR { right: 2px; }
+  #hintL.on, #hintR.on { color: var(--ink); transform: scale(1.15); }
+  .card { width: 100%; max-width: 340px; aspect-ratio: 5 / 6; background: #fff; color: var(--ink); border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(29,42,61,0.22); padding: 20px 20px 16px; position: relative; user-select: none; touch-action: none;
+    display: flex; flex-direction: column; will-change: transform; border: 1px solid rgba(29,42,61,0.06); }
+  .card:empty { visibility: hidden; }
+  .card .icon { font-size: 44px; line-height: 1; }
+  .card h2 { font-size: 19px; margin: 10px 0 8px; }
+  .card p { font-size: 15px; line-height: 1.55; margin: 0; color: #3b4a60; flex: 1; }
+  .card .choices { display: flex; gap: 8px; margin-top: 12px; }
+  .card .choices button { flex: 1; border: 0; border-radius: 12px; padding: 12px 8px; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer; line-height: 1.3; }
+  .card .choices .l, .card .choices .r { background: #4f6485; }   /* 左右は同じ色 = どちらが正解かを色で示さない */
+  .card .tag { position: absolute; top: 14px; right: 16px; font-size: 11px; color: var(--muted); }
+  .card.tip { background: #fff6d0; border-color: #f0dc9a; }
+  .card.tip h2 { color: #9a6b00; font-size: 17px; }
+  .card.tip p { color: #4a3d1f; }
+  .card.tip .delta { font-size: 14px; margin: 8px 0 0; color: var(--ink); }
+  .card.tip .delta span { display: inline-block; margin-right: 10px; }
+  .card.tip .next { margin-top: 12px; border: 0; border-radius: 12px; padding: 13px; font-size: 15px; font-weight: 700; background: #f08a24; color: #fff; cursor: pointer; }   /* 選択肢とは違う色 */
+  .card .stamp { position: absolute; top: 40%; left: 50%; transform: translate(-50%,-50%) rotate(-12deg); font-size: 34px; font-weight: 900;
+    padding: 6px 14px; border: 4px solid; border-radius: 10px; opacity: 0; pointer-events: none; background: rgba(255,255,255,0.85); }
+  .card .stamp.l, .card .stamp.r { color: #4f6485; border-color: #4f6485; }
+  #progress { width: 100%; max-width: 340px; height: 4px; background: rgba(29,42,61,0.12); border-radius: 2px; margin-top: 12px; overflow: hidden; }
+  #progress i { display: block; height: 100%; width: 0; background: var(--gold); transition: width .4s; }
+
+  /* ---- オーバーレイ ---- */
+  .overlay { position: absolute; inset: 0; background: rgba(234,240,248,0.94); z-index: 10; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 24px; text-align: center; }
+  .overlay h1 { font-size: 30px; margin: 0 0 8px; }
+  .overlay .sub { color: #4a5a72; font-size: 14px; line-height: 1.7; margin-bottom: 22px; }
+  .overlay button { border: 0; border-radius: 14px; padding: 15px 30px; font-size: 17px; font-weight: 700; background: var(--accent); color: #fff; cursor: pointer; margin: 6px; }
+  .overlay button.ghost { background: transparent; border: 2px solid #b7c4d6; color: var(--ink); font-size: 14px; padding: 11px 20px; }
+  #result { display: none; overflow-y: auto; justify-content: flex-start; padding-top: max(24px, env(safe-area-inset-top)); }
+  .rcard { background: #fff; color: var(--ink); border-radius: 18px; padding: 20px; width: 100%; max-width: 360px; text-align: left; box-shadow: 0 12px 30px rgba(29,42,61,0.18); }
+  .rcard .type { font-size: 22px; font-weight: 900; margin: 4px 0; }
+  .rcard .big { font-size: 34px; font-weight: 900; color: #c8981e; margin: 4px 0 2px; }
+  .rcard .row { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-bottom: 1px dashed #dfe3ea; }
+  .rcard .note { font-size: 13px; color: #55657f; line-height: 1.6; margin-top: 12px; }
+  .rcard .cmp { background: #f1f5fb; border-radius: 10px; padding: 10px 12px; margin-top: 12px; font-size: 13px; line-height: 1.6; }
+  .fine { font-size: 11px; color: #7f90a8; margin-top: 14px; line-height: 1.5; }
+  .about { background: #fff; border-radius: 18px; padding: 22px 20px; max-width: 360px; width: 100%; text-align: left; box-shadow: 0 12px 30px rgba(29,42,61,0.18); max-height: 90%; overflow-y: auto; }
+  .about h2 { margin: 0 0 10px; font-size: 20px; }
+  .about p, .about li { font-size: 14px; line-height: 1.7; color: #3b4a60; }
+  .about ul { padding-left: 18px; margin: 8px 0; }
+  .about li { margin-bottom: 6px; }
+  .about .small { font-size: 13px; color: #6f7f96; }
+  .about button { width: 100%; margin: 10px 0 0; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <div class="age">現在 <b id="age">20</b> 歳</div>
+    <div class="assets"><small>資産</small><b id="assets">30万円</b></div>
+  </div>
+  <div id="meters">
+    <div class="meter happy">😊 しあわせ<div class="bar"><i id="mHappy"></i></div></div>
+    <div class="meter know">📚 知識<div class="bar"><i id="mKnow"></i></div></div>
+    <div class="meter tsumi">💰 毎月の積立 <span id="tsumiLabel">0円</span><div class="bar"><i id="mTsumi"></i></div></div>
+  </div>
+  <div id="town"><div id="townLabel">🏕 更地とテント</div><div id="toast"></div></div>
+  <div id="deck">
+    <div id="hintL">◀ スワイプ</div><div id="hintR">スワイプ ▶</div>
+    <div class="card" id="card"></div>
+    <div id="progress"><i id="progBar"></i></div>
+  </div>
+
+  <div class="overlay" id="title">
+    <div style="font-size:56px">🏡📈</div>
+    <h1>投資人生ゲーム</h1>
+    <div class="sub">人生にやってくるお金の出来事に、スワイプで答えるだけ。<br>あなたの選択で、資産と街はどう育つ?<br><b>所要時間 約3分</b></div>
+    <button id="startBtn">はじめる</button>
+    <div><button class="ghost" id="aboutBtn">このゲームについて</button></div>
+    <div class="fine">※楽しむためのゲームです。投資を勧めるものではありません。</div>
+  </div>
+
+  <div class="overlay" id="about" style="display:none">
+    <div class="about">
+      <h2>このゲームについて</h2>
+      <p>「投資人生ゲーム」は、お金との付き合い方を<b>楽しみながら考えてもらうため</b>のゲームです。</p>
+      <ul>
+        <li>登場する数字や相場の動きは<b>すべて架空のシミュレーション</b>です。将来の成果を示すものではありません。</li>
+        <li>特定の金融商品や売買、投資をおすすめするものではありません。</li>
+        <li>各カードの解説は一般的な考え方をやさしく言い換えたもので、税制や制度の細かい点(NISAの損益通算・繰越の扱いなど)は扱っていません。正確な情報は公式の案内をご確認ください。</li>
+        <li>実際の投資判断は、ご自身の状況に合わせて、ご自身の責任で行ってください。</li>
+      </ul>
+      <p class="small">選択に「正解」はありません。同じ出来事でも、人によって良い答えは違います。気軽に何度でも遊んでみてください。</p>
+      <button id="aboutClose">閉じる</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="result">
+    <div class="rcard" id="rcard"></div>
+    <div style="margin-top:14px">
+      <button id="shareBtn">結果をシェア</button>
+      <button class="ghost" id="againBtn">もう一度</button>
+    </div>
+    <div class="fine">※ゲームの結果です。将来の成果を示すものではありません。</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+// ============================================================
+// 投資人生ゲーム — 20歳から65歳まで、スワイプで決める投資人生
+// ============================================================
+const TURNS = 25, AGE0 = 20, AGE1 = 65;
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function fmtMan(m) {
+  if (m >= 10000) return (m / 10000).toFixed(m >= 100000 ? 0 : 1) + "億円";
+  return Math.round(m).toLocaleString("ja-JP") + "万円";
+}
+// 色の補間 ("#rrggbb")
+function lerpColor(a, b, t) {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+  const r = Math.round(lerp(pa >> 16, pb >> 16, t)), g = Math.round(lerp((pa >> 8) & 255, (pb >> 8) & 255, t)), bl = Math.round(lerp(pa & 255, pb & 255, t));
+  return "#" + ((r << 16) | (g << 8) | bl).toString(16).padStart(6, "0");
+}
+
+// ---------- サウンド ----------
+let AC = null;
+function audio() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === "suspended") AC.resume(); return AC; }
+function beep(f, dur, delay, vol) {
+  const a = audio(); if (!a) return;
+  try { const t0 = a.currentTime + (delay || 0); const o = a.createOscillator(), g = a.createGain();
+    o.type = "triangle"; o.frequency.value = f; g.gain.setValueAtTime(vol || 0.08, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur); } catch (e) {}
+}
+const sUpgrade = () => [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.35, i * 0.09));
+const sDown = () => [440, 370, 311].forEach((f, i) => beep(f, 0.3, i * 0.12, 0.06));
+const sSwipe = () => beep(660, 0.08, 0, 0.04);
+addEventListener("pointerdown", () => audio(), { once: true });
+
+// ---------- 状態 ----------
+let S;
+function newState() {
+  return {
+    turn: 0, age: AGE0, assets: 30, income: 280, tsumi: 0, risk: 0.5, happy: 60, know: 20,
+    panics: 0, gambles: 0, contYears: 0, riskSum: 0, riskN: 0,
+    fee: 0, held: false, lever: false, used: new Set(), history: [], crashes: 0
+  };
+}
+const ageAt = turn => Math.round(AGE0 + (AGE1 - AGE0) * turn / TURNS);
+
+// ---------- カード ----------
+// fx: assets(加算,万円) assetsPct(倍率) tsumi(加算) tsumiSet tsumiMul risk(加算) happy know income(倍率) fee lever panic held gamble bigGamble
+const CARDS = [
+  // ---- 人生の出来事 ----
+  { id: "job", age: [20, 22], icon: "🎉", tag: "人生", title: "社会人1年目", text: "初任給が振り込まれた。使い道は?",
+    l: { label: "全部使って\n自分にご褒美", fx: { happy: 12, assets: 5 }, tip: "ご褒美も大事。ただ「先に取り分けて残りで暮らす」習慣は、若いうちほど効きます。" },
+    r: { label: "まず1割を\n貯金する", fx: { assets: 28, know: 5, happy: 3 }, tip: "「先取り貯蓄」は最も再現性の高い資産形成のコツ。給料日に自動で移すと続きます。" } },
+  { id: "nisa", age: [21, 27], icon: "📮", tag: "投資", title: "NISAを勧められた", text: "同僚が「NISAで積立を始めた」と言っている。",
+    l: { label: "よく分からない\nので後で", fx: { happy: 2 }, tip: "「後で」は一番高くつく選択。始めるのが1年遅れると、45年後の差は思ったより大きくなります。" },
+    r: { label: "月1万円から\n始めてみる", fx: { tsumi: 1, know: 10, happy: 3 }, tip: "少額でも早く始めるのが複利の鉄則。金額は後から増やせます。" } },
+  { id: "raise", age: [26, 45], icon: "📈", tag: "仕事", title: "昇給した!", text: "月給が3万円上がった。増えた分をどうする?",
+    l: { label: "生活を少し\n豊かにする", fx: { happy: 10, income: 1.1 }, tip: "収入が増えると支出も増える「ライフスタイル・インフレ」。全部使わず一部を回すのがコツ。" },
+    r: { label: "積立を\n増やす", fx: { tsumi: 2, income: 1.1, happy: 3 }, tip: "昇給分の半分を積立に回すと、生活水準を落とさず投資額が増える。無理のない王道です。" } },
+  { id: "marry", age: [26, 38], icon: "💍", tag: "人生", title: "結婚することに", text: "結婚式と新生活の準備。お金の話も避けられない。",
+    l: { label: "式は盛大に", fx: { assets: -250, happy: 15 }, tip: "思い出はプライスレス。ただ、家計を「見える化」するチャンスは逃さないで。" },
+    r: { label: "質素に、家計は\n2人で共有", fx: { assets: -60, happy: 8, know: 5 }, tip: "夫婦で「お金の話」をオープンにできる家庭は、資産形成がうまくいきやすい傾向があります。" } },
+  { id: "house", age: [30, 44], icon: "🏠", tag: "人生", title: "マイホーム、買う?", text: "頭金500万円、35年ローン。賃貸を続けて投資に回す手もある。",
+    l: { label: "35年ローンで\n購入", fx: { assets: -500, happy: 10, income: 0.93 }, tip: "持ち家も賃貸も、どちらが正解とは言い切れません。大事なのは「ローン返済で積立が止まらないか」。" },
+    r: { label: "賃貸を続けて\n投資に回す", fx: { tsumi: 1, know: 4 }, tip: "住居費を抑えて投資に回すのも立派な戦略。ただし老後の住まいの計画はセットで。" } },
+  { id: "baby", age: [27, 40], icon: "👶", tag: "人生", title: "赤ちゃんが生まれた", text: "教育費は将来かかる。今から準備する?",
+    l: { label: "学資は預金で\n堅実に", fx: { risk: -0.1, tsumi: 1, happy: 8 }, tip: "使う時期が決まっているお金は、値動きの少ない置き方が基本。目的で分けて考えるのが大切。" },
+    r: { label: "長期なら\n積立で準備", fx: { tsumi: 1, know: 5, happy: 8 }, tip: "15年以上先のお金なら積立投資も選択肢。ただし直前の暴落に備え、近づいたら安全資産へ。" } },
+  { id: "edu", age: [44, 56], icon: "🎓", tag: "人生", title: "教育費のピーク", text: "大学の学費でまとまったお金が出ていく。積立はどうする?",
+    l: { label: "積立を\n一時停止", fx: { assets: -400, tsumiSet: 0, happy: 4 }, tip: "止めるのは簡単、再開は難しい。減額でも「ゼロにしない」ことが、その後の資産に効きます。" },
+    r: { label: "減額して\n続ける", fx: { assets: -400, tsumiMul: 0.5, know: 5 }, tip: "苦しい時期こそ少額でも継続。積立の本当の価値は「続けた年数」に宿ります。" } },
+  { id: "change", age: [28, 45], icon: "💼", tag: "仕事", title: "転職の誘い", text: "年収2割アップのオファー。ただし新しい環境は不安もある。",
+    l: { label: "挑戦する", fx: { income: 1.2, happy: -4 }, tip: "収入を増やす力(稼ぐ力)は、最強の投資リターン源。若いほど挑戦のリスクは小さめです。" },
+    r: { label: "今の会社に\n残る", fx: { happy: 5 }, tip: "安定も価値。ただ「自分の市場価値」を定期的に確かめておくと、選択肢が増えます。" } },
+  { id: "side", age: [24, 48], icon: "💻", tag: "仕事", title: "副業を始める?", text: "得意なことで月3万円くらい稼げそう。",
+    l: { label: "始める", fx: { income: 1.08, happy: -3, tsumi: 1 }, tip: "副業収入をそのまま積立に回すと、生活を変えずに投資額を増やせます。" },
+    r: { label: "本業に\n集中する", fx: { happy: 3 }, tip: "時間と心の余裕も資産。無理に増やさない選択も間違いではありません。" } },
+  { id: "care", age: [46, 60], icon: "🧓", tag: "人生", title: "親の介護が始まった", text: "お金も時間も必要になる。",
+    l: { label: "仕事を減らして\n自分で看る", fx: { assets: -150, income: 0.8, happy: 2 }, tip: "介護離職は収入減が長引きやすい。使える制度やサービスを先に調べるのが大切。" },
+    r: { label: "介護サービス\nを活用する", fx: { assets: -300, happy: -3, know: 3 }, tip: "お金で時間を買う判断。生活防衛資金があると、こういう局面で慌てずに済みます。" } },
+  { id: "health", age: [38, 58], icon: "🏥", tag: "人生", title: "入院することに", text: "治療費と休職で150万円の出費。",
+    l: { label: "貯めていた現金\nで乗り切る", fx: { assets: -150, happy: -4 }, tip: "生活防衛資金の出番。投資に手をつけずに済むと、回復後もそのまま資産が育ちます。" },
+    r: { label: "投資を取り崩す", fx: { assets: -150, risk: -0.1, happy: -6, tsumiMul: 0.7 }, tip: "取り崩しが暴落と重なると痛い。健康も資産のうち — 保険と現金の備えを。" } },
+  { id: "retire", age: [56, 64], icon: "🎊", tag: "人生", title: "退職金が出た", text: "1,500万円のまとまったお金。どう扱う?",
+    l: { label: "一括で\n株に投資", fx: { assets: 1500, risk: 0.3 }, tip: "退職金の一括投資は直後の暴落が致命傷に。使う時期が近いお金ほど、慎重に。" },
+    r: { label: "半分は現金、\n残りは少しずつ", fx: { assets: 1500, risk: -0.15, know: 6, happy: 5 }, tip: "老後は「増やす」より「減らさない」が主役。時間を分けて投資するのも立派な分散です。" } },
+  { id: "fire", age: [48, 58], icon: "🏝", tag: "人生", title: "早期リタイアの誘惑", text: "資産もそこそこ。仕事を辞めて自由に暮らす?",
+    l: { label: "思い切って\nリタイア", fx: { income: 0.3, happy: 12, tsumiSet: 0 }, tip: "自由な時間は最高の資産。ただし収入ゼロの期間が長いほど、相場の下げが直撃します。" },
+    r: { label: "好きな仕事に\n変えて続ける", fx: { income: 0.7, happy: 8 }, tip: "「稼ぐ力を少し残す」だけで、老後資金の計算は劇的に楽になります。" } },
+  { id: "license", age: [23, 40], icon: "📝", tag: "仕事", title: "資格の勉強を始める?", text: "取れば年収が上がりそうな資格。受講料は20万円。",
+    l: { label: "自分に投資する", fx: { assets: -20, income: 1.12, know: 4, happy: -2 }, tip: "「自分への投資」は元本割れしにくい投資。稼ぐ力が上がれば、積立の余力も増えます。" },
+    r: { label: "今はやめておく", fx: { happy: 3 }, tip: "無理に背伸びしないのも一つ。ただ、20代の20万円は、リターンが最も大きくなりやすい使い道でもあります。" } },
+  { id: "car", age: [24, 45], icon: "🚗", tag: "お金", title: "車を買う?", text: "新車は300万円。ローンを組めば手が届く。",
+    l: { label: "新車を\nローンで", fx: { assets: -120, income: 0.95, happy: 10 }, tip: "車は買った瞬間から値下がりする資産。ローンの金利も乗ると、実は家の次に大きな買い物です。" },
+    r: { label: "中古車か\nカーシェア", fx: { assets: -40, happy: 4, know: 3 }, tip: "「必要な時だけ使う」発想で、年間数十万円の差。浮いた分を積立に回すと45年で大きな差に。" } },
+  { id: "kakeibo", age: [22, 40], icon: "📒", tag: "お金", title: "家計簿アプリを入れた", text: "支出を全部記録するのは、正直めんどう。",
+    l: { label: "3日で\nやめた", fx: { happy: 2 }, tip: "続かないのが普通です。「固定費だけ年1回見直す」くらいのゆるさでも効果は大きい。" },
+    r: { label: "1か月だけ\n続けてみる", fx: { know: 7, tsumi: 0.5 }, tip: "1か月記録するだけで「知らずに漏れていたお金」が見えます。それを積立に回すのが王道。" } },
+  { id: "prepay", age: [35, 55], icon: "🏦", tag: "お金", title: "ローンの繰り上げ返済?", text: "手元に200万円。ローン返済に充てるか、投資に回すか。",
+    l: { label: "繰り上げ返済\nで安心", fx: { assets: -200, income: 1.04, happy: 6 }, tip: "借金を減らすのは「確実なリターン」。金利が高いローンほど返済が優先です。" },
+    r: { label: "投資に回す", fx: { risk: 0.05, know: 5 }, tip: "ローン金利より投資の期待リターンが高いなら投資も合理的。ただし確実ではない点は忘れずに。" } },
+  { id: "tax", age: [25, 60], icon: "🧾", tag: "お金", title: "節税の制度を知った", text: "ふるさと納税や各種控除。手続きが少し面倒そう。",
+    l: { label: "面倒なので\nやらない", fx: { happy: 1 }, tip: "「面倒」で毎年数万円を逃している人は多い。一度やれば2回目からは慣れます。" },
+    r: { label: "調べて\n使ってみる", fx: { assets: 15, know: 8 }, tip: "制度を使うのは「確実に増える投資」。リスクゼロでリターンがある、数少ないお金の話です。" } },
+  { id: "revolving", age: [22, 35], icon: "💳", tag: "誘惑", title: "「リボ払いなら月1万円」", text: "欲しいものがある。カード会社は分割を勧めてくる。",
+    l: { label: "リボ払いで\n買う", fx: { assets: -60, happy: 6, know: -3 }, tip: "リボ払いの金利は年15%前後。投資で年15%を安定して出すのは至難の業。つまり逆方向の投資です。" },
+    r: { label: "貯めてから\n買う", fx: { happy: 2, know: 5 }, tip: "「買えるまで待つ」だけで金利がゼロに。欲しい気持ちが冷めることもあり、それも節約です。" } },
+  { id: "travel", age: [25, 55], icon: "✈️", tag: "人生", title: "海外旅行に行く?", text: "友人に誘われた。費用は30万円。",
+    l: { label: "行く!", fx: { assets: -30, happy: 14 }, tip: "経験は資産です。使うと決めたお金は、堂々と使うのが健全な家計。" },
+    r: { label: "今回は\n見送る", fx: { happy: -3, assets: 5 }, tip: "見送るのも自由。ただ「使わない理由が不安だけ」なら、一度予算を決めて使ってみて。" } },
+  { id: "pet", age: [28, 58], icon: "🐶", tag: "人生", title: "ペットを迎える?", text: "一生でかかる費用は、犬で200〜300万円と言われる。",
+    l: { label: "家族に迎える", fx: { assets: -80, happy: 15, income: 0.98 }, tip: "しあわせは数字では測れません。ただ、医療費などの「不意の出費」は事前に見込んでおくと安心。" },
+    r: { label: "今は\n見送る", fx: { happy: -2 }, tip: "責任と費用を考えて見送るのも愛情。タイミングが来たら改めて。" } },
+  { id: "insurance", age: [28, 50], icon: "📄", tag: "お金", title: "保険の見直し", text: "毎月3万円の保険料。本当に必要な保障はどれ?",
+    l: { label: "安心のため\nそのまま", fx: { income: 0.97 }, tip: "「安心料」は必要ですが、掛けすぎは家計の重荷。公的保障でカバーされる部分を知ると減らせます。" },
+    r: { label: "必要最小限に\n絞る", fx: { tsumi: 1, know: 7 }, tip: "保険は「起きたら破綻する事態」に絞るのが基本。浮いた保険料を積立に回す人は多い。" } },
+  { id: "inherit", age: [50, 64], icon: "👴", tag: "人生", title: "親からの相続", text: "800万円を受け取った。急に増えたお金の扱いは難しい。",
+    l: { label: "すぐ全額\n投資する", fx: { assets: 800, risk: 0.15 }, tip: "まとまったお金の一括投資は、直後の下落がこたえます。時間を分けて入れるのも手。" },
+    r: { label: "半年寝かせて\n考える", fx: { assets: 800, know: 5, happy: 4 }, tip: "「急に増えたお金はすぐ動かさない」は鉄則。冷静になるまでの時間も立派な資産防衛です。" } },
+  { id: "abroad", age: [46, 56], icon: "🎒", tag: "人生", title: "子どもが留学したい", text: "費用は300万円。本人はやる気満々。",
+    l: { label: "全力で\n応援する", fx: { assets: -300, happy: 10 }, tip: "教育は家族にとって最大の投資。ただし自分の老後資金を削りすぎないラインは決めておいて。" },
+    r: { label: "奨学金と\n併用させる", fx: { assets: -120, know: 4, happy: 4 }, tip: "「親が全部出す」以外の選択肢を一緒に探すのも教育。お金の話ができる親子関係は財産です。" } },
+  { id: "renovate", age: [50, 62], icon: "🔨", tag: "人生", title: "家のリフォーム", text: "水回りが古くなってきた。250万円の見積もり。",
+    l: { label: "この機会に\n全面改修", fx: { assets: -400, happy: 10 }, tip: "快適さはしあわせに直結。ただし老後の家計に響かない範囲で、が前提。" },
+    r: { label: "必要な所だけ\n直す", fx: { assets: -150, happy: 4, know: 2 }, tip: "「今必要な分だけ」は、家計にも家にも優しい判断。予備費を残しておくと次の故障にも慌てません。" } },
+  { id: "nenkin", age: [50, 60], icon: "📬", tag: "お金", title: "年金の見込み額が届いた", text: "思ったより少ない…と感じる人が多い数字。",
+    l: { label: "見なかった\nことにする", fx: { happy: -4 }, tip: "見ないと不安は消えません。年金額を知ると「あといくら必要か」が初めて計算できます。" },
+    r: { label: "老後の収支を\n計算してみる", fx: { know: 8, tsumi: 1, happy: 3 }, tip: "年金＋資産の取り崩しで生活費を賄えるか。50代でこの計算をした人は、老後の不安が段違いに小さい。" } },
+  // ---- お金の習慣 ----
+  { id: "book", age: [20, 40], icon: "📚", tag: "学び", title: "投資の本を買った", text: "話題の入門書。読む? それとも動画で済ます?",
+    l: { label: "動画で\nざっくり", fx: { know: 4, happy: 2 }, tip: "入口としては十分。ただ「なぜそうなるか」まで分かると、暴落のときに迷わなくなります。" },
+    r: { label: "じっくり\n読み込む", fx: { know: 12, happy: -2 }, tip: "知識は暴落時の「お守り」。仕組みを知っている人ほど、パニック売りをしません。" } },
+  { id: "bonus", age: [23, 60], icon: "🎁", tag: "お金", title: "ボーナスが出た", text: "手取り40万円。どう使う?",
+    l: { label: "旅行で\nリフレッシュ", fx: { happy: 12, assets: 5 }, tip: "楽しみに使うお金も大切。ボーナスの「半分ルール」(半分使う・半分回す)が続けやすい。" },
+    r: { label: "半分は\n投資に回す", fx: { assets: 20, happy: 5 }, tip: "臨時収入の一部を投資に回す習慣は、積立額を無理なく底上げしてくれます。" } },
+  { id: "fee", age: [25, 60], icon: "🏦", tag: "誘惑", title: "銀行のおすすめ商品", text: "窓口で「人気の投資信託」を勧められた。手数料は年3%。",
+    l: { label: "おすすめなら\n買う", fx: { fee: 1, happy: 2 }, tip: "手数料3%は、リターンを毎年3%削るのと同じ。30年で資産が半分近く違うこともあります。" },
+    r: { label: "手数料を\n確認して断る", fx: { know: 10 }, tip: "「手数料を確認する」は投資家の基本動作。低コストの商品を選ぶだけで、長期の差は歴然。" } },
+  { id: "emergency", age: [23, 35], icon: "🛟", tag: "お金", title: "生活防衛資金、いる?", text: "急な出費に備えて現金を残しておく? それとも全部投資?",
+    l: { label: "全部投資に\n回す", fx: { risk: 0.15, happy: -4 }, tip: "急な出費のたびに投資を取り崩すと、タイミング次第で損が確定します。現金のクッションは必要。" },
+    r: { label: "生活費半年分は\n現金で", fx: { know: 8, happy: 6 }, tip: "生活防衛資金があると暴落でも慌てない。投資を続ける「心の余裕」を買うお金です。" } },
+  { id: "divi", age: [30, 64], icon: "💴", tag: "お金", title: "配当金が入った", text: "保有している株から配当が振り込まれた。",
+    l: { label: "ごほうびに\n使う", fx: { happy: 8 }, tip: "配当を「使えるお金」として楽しむのも一つ。ただし再投資すると、雪だるまの芯になります。" },
+    r: { label: "再投資する", fx: { assetsPct: 1.02, know: 3 }, tip: "配当の再投資は複利の加速装置。長期で見ると、リターンのかなりの部分が再投資由来です。" } },
+  { id: "hobby", age: [40, 64], icon: "🎨", tag: "心", title: "趣味にお金をかける?", text: "ずっとやりたかったことがある。まとまったお金がかかる。",
+    l: { label: "今しかない、\nやる", fx: { assets: -120, happy: 14 }, tip: "お金は使うためにある。「増やす」ばかりで人生が痩せたら本末転倒です。" },
+    r: { label: "もう少し\n我慢する", fx: { happy: -4, assets: 10 }, tip: "我慢のしすぎは続きません。「使う予算」を決めて、その中で楽しむのがバランスのコツ。" } },
+  { id: "esop", age: [25, 45], icon: "🏢", tag: "投資", title: "会社の持株会に誘われた", text: "奨励金つきで自社株が買える。でも給料も資産も同じ会社頼み…",
+    l: { label: "奨励金が\nお得なので全力", fx: { risk: 0.15, assetsPct: 1.04 }, tip: "奨励金は魅力ですが、会社が傾くと給料と資産が同時に減る「集中リスク」に。上限を決めて。" },
+    r: { label: "少額だけ\n参加する", fx: { assetsPct: 1.01, know: 6 }, tip: "「卵を一つのカゴに盛るな」。勤め先と資産の置き場は分けるのが分散の基本です。" } },
+  // ---- 誘惑・心 ----
+  { id: "friend", age: [22, 50], icon: "🤫", tag: "誘惑", title: "友人の「絶対上がる株」", text: "「ここだけの話、この銘柄は絶対上がる」と友人が言う。",
+    l: { label: "乗る!", fx: { gamble: 1 }, tip: "「絶対」がつく話は、たいてい絶対ではありません。結果は運次第、それが投機です。" },
+    r: { label: "丁寧に断る", fx: { know: 6, happy: 1 }, tip: "情報源が「友人の熱量」だけのときは見送るのが吉。分からないものには投資しない、が原則。" } },
+  { id: "sns", age: [22, 60], icon: "📱", tag: "誘惑", title: "SNSで「今すぐ買え」", text: "フォロワー10万人の投資アカウントが、ある銘柄を強く推している。",
+    l: { label: "言う通りに\n買う", fx: { gamble: 1 }, tip: "推す人は、あなたが買った後に売るかもしれません。SNSの推奨は「その人の出口」の可能性も。" },
+    r: { label: "自分で調べて\nから決める", fx: { know: 8 }, tip: "他人の結論ではなく、自分で理由を説明できるものだけ買う。これだけで大きな失敗はほぼ防げます。" } },
+  { id: "compare", age: [30, 52], icon: "😰", tag: "心", title: "友人の資産額を聞いた", text: "同い年なのに、自分の倍以上持っていた…",
+    l: { label: "焦って\nリスクを上げる", fx: { risk: 0.2, happy: -6 }, tip: "他人と比べて動かした投資は、たいてい高値づかみになります。比べる相手は「昨日の自分」。" },
+    r: { label: "自分のペースを\n守る", fx: { happy: 6, know: 3 }, tip: "資産形成はマラソン。人のペースに合わせて走ると、途中で息切れします。" } },
+  { id: "enough", age: [30, 60], icon: "🧮", tag: "心", title: "老後、いくらあれば足りる?", text: "物価が上がり続けて、昔の「目安の額」が当てにならない。周りも不安そうだ。",
+    l: { label: "不安で夜も\n眠れない", fx: { happy: -10 }, tip: "不安は行動でしか消えません。「必要な額」は人によって違う。自分の数字を出すと、案外落ち着きます。" },
+    r: { label: "自分の生活費\nから逆算する", fx: { tsumi: 1, know: 6, happy: 3 }, tip: "「月の生活費×12×年数 − 年金」で自分の目安が出ます。全国平均の数字より、自分の数字のほうがずっと強い。" } },
+  { id: "lottery", age: [22, 62], icon: "🎫", tag: "誘惑", title: "宝くじの季節", text: "「夢を買う」つもりで3万円分、買ってみる?",
+    l: { label: "夢を買う", fx: { assets: -3, happy: 4 }, tip: "宝くじの還元率は約45%。買った瞬間に半分以上消える計算。「娯楽費」として楽しむ分には◎。" },
+    r: { label: "同じ額を\n積立に", fx: { assets: 3, know: 3 }, tip: "3万円を45年、年5%で運用すると約27万円。宝くじは「当たれば大きい」、積立は「ほぼ確実に増える」。" } },
+  { id: "ai", age: [30, 62], icon: "🤖", tag: "誘惑", title: "AIに運用を任せる?", text: "「AIが最適な売買をします」というサービスが話題。",
+    l: { label: "全部AIに\n任せる", fx: { fee: 1, happy: 4 }, tip: "便利ですが、中身と手数料は必ず確認を。「AI」という言葉で高い手数料が隠れていることもあります。" },
+    r: { label: "仕組みと手数料を\n調べる", fx: { know: 8 }, tip: "道具が何であれ、原則は同じ。「分散・低コスト・長期」を満たしているかで判断すればOK。" } },
+  { id: "scam", age: [52, 64], icon: "☎️", tag: "誘惑", title: "「元本保証で年10%」の電話", text: "親切そうな声で、限定の投資話を持ちかけられた。",
+    l: { label: "話を\n聞いてみる", fx: { bigGamble: 1, know: -5 }, tip: "「元本保証」と「高利回り」は両立しません。この組み合わせは、ほぼ確実に詐欺です。" },
+    r: { label: "即、断る", fx: { know: 6, happy: 3 }, tip: "うまい話は向こうから来ない。「電話で勧誘される投資は断る」と決めておくだけで守れます。" } },
+  { id: "ipo", age: [24, 60], icon: "🔔", tag: "誘惑", title: "話題の新規上場株", text: "抽選に当たった。初値は高くなりそうと噂。",
+    l: { label: "上場日に\n飛びつく", fx: { gamble: 1 }, tip: "新規上場株は最初の数日が最も値動きが荒い。「祭り」の熱で買うと高値づかみになりがち。" },
+    r: { label: "様子を見る", fx: { know: 5 }, tip: "本当に良い会社なら、落ち着いてからでも十分間に合います。急ぐ理由がある投資は、たいてい危ない。" } },
+  // ---- 相場 ----
+  { id: "yen", age: [25, 62], icon: "💱", tag: "相場", title: "円安が進んでいる", text: "1ドル160円。海外資産を持っている人は評価額が増えている。",
+    l: { label: "米国株の割合を\n増やす", fx: { risk: 0.1, know: 3 }, tip: "為替は資産に影響する要素の一つ。日本と海外、両方に分けて持つ「通貨の分散」も考え方の一つ。" },
+    r: { label: "特に何も\nしない", fx: { know: 3, happy: 2 }, tip: "ニュースのたびに動かないのも立派な判断。長期投資では「何もしない」が正解のことも多い。" } },
+  { id: "yenhigh", age: [25, 62], icon: "🔁", tag: "相場", title: "急に円高になった", text: "海外資産の評価額が1割減った。周りは「やっぱり日本円が安全」と言う。",
+    l: { label: "海外資産を\n全部売る", fx: { assetsPct: 0.94, risk: -0.2, know: -2 }, tip: "為替は上にも下にも動きます。為替のたびに売買すると、往復で損を重ねやすい。" },
+    r: { label: "安く買える\nチャンスと見る", fx: { know: 6 }, tip: "積立中なら円高は「同じ円で多く買える」時期。長期では為替の影響はならされていきます。" } },
+  { id: "inflation", age: [25, 62], icon: "🛒", tag: "相場", title: "物価が上がっている", text: "同じ生活で支出が1割増えた。現金の価値が目減りしている。",
+    l: { label: "現金で持ち続ける", fx: { assetsPct: 0.97, happy: 1 }, tip: "インフレは「見えない税金」。現金は安全に見えて、買える量は少しずつ減っています。" },
+    r: { label: "投資の割合を\n増やす", fx: { risk: 0.1, know: 4 }, tip: "株式や不動産はインフレに強いとされる資産。物価上昇局面で現金だけは、実は守りになりません。" } },
+  { id: "hidividend", age: [28, 62], icon: "🏭", tag: "相場", title: "高配当株ブーム", text: "「配当だけで生活」という言葉が流行している。",
+    l: { label: "高配当株に\n集中投資", fx: { risk: 0.1, assetsPct: 1.03 }, tip: "配当は魅力的ですが、配当が高い=業績不安のサインのことも。集中より分散が基本。" },
+    r: { label: "分散を保つ", fx: { know: 5 }, tip: "ブームに乗り換え続けると、常に高値で買うことに。決めた方針を守るのが一番難しくて一番効く。" } },
+  { id: "bubble", age: [24, 60], icon: "🚀", tag: "相場", title: "○○バブルが来た", text: "新技術の株が急騰。「乗り遅れるな」と誰もが言う。",
+    l: { label: "全力で\n飛び乗る", fx: { bigGamble: 1 }, tip: "バブルは「誰もが儲かっている」と感じた頃が一番危ない。全力は避け、失ってもいい額で。" },
+    r: { label: "少額だけ\n試す", fx: { assetsPct: 1.05, know: 5 }, tip: "「失っても痛くない額で参加する」は健全な好奇心の満たし方。本体の積立には触れないこと。" } },
+  { id: "peak", age: [26, 62], icon: "🏆", tag: "相場", title: "資産が過去最高!", text: "相場は絶好調。周りは皆「もっと増やせる」と言っている。",
+    l: { label: "レバレッジで\n倍賭け", fx: { lever: 1, happy: 5 }, tip: "レバレッジは上げも下げも倍。好調時ほど「次の下げ」がやってきます。" },
+    r: { label: "嬉しいけど\n淡々と積立", fx: { know: 5, happy: 4 }, tip: "好調時に浮かれない人が、暴落時に慌てない人。淡々と続けるのが最強の戦略です。" } },
+  { id: "flat", age: [24, 62], icon: "😴", tag: "相場", title: "3年も横ばい相場", text: "積み立てているのに資産が増えない。やめたくなってきた。",
+    l: { label: "つまらないので\nやめる", fx: { tsumiSet: 0, happy: 2, know: -2 }, tip: "横ばいの間に買った分が、次の上昇で一番効きます。やめた人は、その恩恵を受け取れません。" },
+    r: { label: "淡々と\n続ける", fx: { know: 6, happy: -1 }, tip: "退屈は長期投資の正常運転。「何も起きない年」を積み重ねた人が、最後に笑います。" } },
+];
+const CRASH = { id: "crash", icon: "📉", tag: "相場", title: "大暴落!", text: "株価が3割下落。ニュースは悲観一色、SNSは阿鼻叫喚。",
+  l: { label: "怖い…\n全部売る", fx: { panic: 1 }, tip: "売った瞬間に損が確定します。歴史上、暴落はいつか回復してきました。売った人だけが回復を取り逃します。" },
+  r: { label: "歯を食いしばって\n積立を続ける", fx: { held: 1 }, tip: "暴落は「安く買えるセール」。続けた人だけが、その後の回復を丸ごと受け取れます。" } };
+const RECOVER = { id: "recover", icon: "🌅", tag: "相場", title: "相場が回復してきた", text: "あの暴落から1年。株価は戻り、続けた人の資産は増えている。",
+  l: { label: "ほっとした。\n少し利確する", fx: { assetsPct: 1.15, happy: 8 }, tip: "利益を確定するのも自由。ただし「次も暴落で売らない」ために、今回の経験を覚えておいて。" },
+  r: { label: "何もせず\n続ける", fx: { assetsPct: 1.25, know: 6, happy: 5 }, tip: "「暴落を耐えた経験」は、どんな知識より強いお守りになります。" } };
+const CALM = { id: "calm", icon: "☕", tag: "日常", title: "穏やかな1年", text: "大きな出来事はなし。相場も淡々。こんな年をどう過ごす?",
+  l: { label: "資産を眺めて\nニヤニヤ", fx: { happy: 5 }, tip: "何もしない年こそ、複利が静かに働いている年。退屈は長期投資の味方です。" },
+  r: { label: "家計を見直す", fx: { know: 4, tsumi: 0.5 }, tip: "年に1回の家計点検で、積立額を少し上げる。地味ですが最も効く習慣の一つ。" } };
+const REPEATABLE = ["bonus", "divi", "yen", "inflation", "enough", "compare", "sns", "hobby", "travel", "flat"];
+
+// ---------- 効果の適用 ----------
+function applyFx(fx) {
+  const b = { assets: S.assets, happy: S.happy, know: S.know, tsumi: S.tsumi };
+  if (fx.assets) S.assets += fx.assets;
+  if (fx.assetsPct) S.assets *= fx.assetsPct;
+  if (fx.tsumi) S.tsumi += fx.tsumi;
+  if (fx.tsumiSet !== undefined) S.tsumi = fx.tsumiSet;
+  if (fx.tsumiMul) S.tsumi *= fx.tsumiMul;
+  if (fx.risk) S.risk = clamp(S.risk + fx.risk, 0, 1);
+  if (fx.happy) S.happy += fx.happy;
+  if (fx.know) S.know += fx.know;
+  if (fx.income) S.income *= fx.income;
+  if (fx.fee) S.fee = 1;
+  if (fx.lever) S.lever = true;
+  if (fx.panic) { S.panics++; S.assets *= 0.7; S.risk = Math.max(0, S.risk - 0.3); S.tsumi = 0; S.happy -= 8; }
+  if (fx.held) { S.assets *= 0.7; S.held = true; S.happy -= 5; }
+  if (fx.gamble) { S.gambles++; const win = Math.random() < 0.45; S.assets *= win ? 1.35 : 0.7; S.happy += win ? 6 : -8; }
+  if (fx.bigGamble) { S.gambles++; const win = Math.random() < 0.35; S.assets *= win ? 2.0 : 0.45; S.happy += win ? 10 : -12; }
+  S.happy = clamp(S.happy, 0, 100); S.know = clamp(S.know, 0, 100);
+  S.tsumi = clamp(S.tsumi, 0, Math.max(0.5, S.income * 0.4 / 12));
+  S.assets = Math.max(0, S.assets);
+  return { assets: S.assets - b.assets, happy: S.happy - b.happy, know: S.know - b.know, tsumi: S.tsumi - b.tsumi };
+}
+function simulateYears(years) {
+  for (let i = 0; i < years; i++) {
+    let r = (0.065 + 0.14 * gauss()) * S.risk + 0.005 * (1 - S.risk);
+    if (S.fee) r -= 0.03;
+    if (S.lever) { r *= 2; if (Math.random() < 0.35) S.lever = false; }
+    S.assets = S.assets * (1 + r) + S.tsumi * 12;
+    if (S.tsumi > 0) S.contYears++;
+    S.income *= 1.02;
+    S.riskSum += S.risk; S.riskN++;
+    if (S.tsumi * 12 > S.income * 0.35) S.happy -= 2;
+  }
+  S.happy = clamp(S.happy, 0, 100);
+}
+
+// ---------- カードの選出 ----------
+let crashTurns = [];
+function nextCard() {
+  const age = S.age;
+  if (S.turn === 0) return CARDS.find(c => c.id === "job");
+  if (S.turn === 2 && !S.used.has("nisa")) return CARDS.find(c => c.id === "nisa");
+  if (S.held) { S.held = false; return RECOVER; }
+  if (crashTurns.includes(S.turn)) return CRASH;
+  let pool = CARDS.filter(c => !S.used.has(c.id) && age >= c.age[0] && age <= c.age[1]);
+  if (!pool.length) {
+    pool = CARDS.filter(c => REPEATABLE.includes(c.id) && age >= c.age[0] && age <= c.age[1]);
+    pool.forEach(c => S.used.delete(c.id));
+  }
+  if (!pool.length) return CALM;
+  return pick(pool);
+}
+
+// ---------- 3D の街 ----------
+const townEl = document.getElementById("town");
+let renderer, scene, camera, townGroup, grassGroup, groundMat, sun, ambient, tier = -1, popT = 0, shakeT = 0, tGlobal = 0, camAngle = 0, grassN = -1;
+const TIERS = [
+  { min: 0,     label: "🏕 更地とテント" },
+  { min: 150,   label: "🏢 質素なアパート" },
+  { min: 600,   label: "🏠 2階建ての一軒家" },
+  { min: 1500,  label: "🚗 庭と車のある家" },
+  { min: 3500,  label: "🏡 プール付きの豪邸" },
+  { min: 8000,  label: "🏙 タワーマンション" },
+  { min: 20000, label: "🌆 街まるごと" }
+];
+function tierOf(assets) { let t = 0; TIERS.forEach((x, i) => { if (assets >= x.min) t = i; }); return t; }
+const GRASS_POS = Array.from({ length: 46 }, (_, i) => { const a = i * 2.399, r = 0.9 + (i % 7) * 0.45; return [Math.cos(a) * r, Math.sin(a) * r]; });
+
+function init3D() {
+  if (typeof THREE === "undefined") { townEl.innerHTML += '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:60px">🏠</div>'; return; }
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  townEl.insertBefore(renderer.domElement, townEl.firstChild);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+  ambient = new THREE.AmbientLight(0xffffff, 0.75); scene.add(ambient);
+  sun = new THREE.DirectionalLight(0xfff2d0, 0.9); sun.position.set(4, 8, 5); scene.add(sun);
+  groundMat = new THREE.MeshLambertMaterial({ color: 0x9a7b5a });
+  const ground = new THREE.Mesh(new THREE.CylinderGeometry(4.3, 4.3, 0.4, 40), groundMat);
+  ground.position.y = -0.2; scene.add(ground);
+  const soil = new THREE.Mesh(new THREE.CylinderGeometry(4.3, 3.7, 1.2, 40), new THREE.MeshLambertMaterial({ color: 0x7a5a3e }));
+  soil.position.y = -1.0; scene.add(soil);
+  [[-5.5, -4, 2.6, 0x4a8a60], [0.5, -7, 3.4, 0x3f7a55], [6, -4.5, 2.4, 0x4a8a60]].forEach(([x, z, r, c]) => {
+    const hill = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 12), new THREE.MeshLambertMaterial({ color: c }));
+    hill.scale.y = 0.45; hill.position.set(x, -0.6, z); scene.add(hill);
+  });
+  grassGroup = new THREE.Group(); scene.add(grassGroup);
+  townGroup = new THREE.Group(); scene.add(townGroup);
+  resize3D(); addEventListener("resize", resize3D);
+  (function loop() { requestAnimationFrame(loop); render3D(); })();
+}
+function resize3D() {
+  if (!renderer) return;
+  const w = townEl.clientWidth, h = townEl.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+const mat = c => new THREE.MeshLambertMaterial({ color: c });
+function box(w, h, d, c, x, y, z) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c)); m.position.set(x, y + h / 2, z); return m; }
+function roof(w, h, c, x, y, z, ry) { const m = new THREE.Mesh(new THREE.ConeGeometry(w, h, 4), mat(c)); m.position.set(x, y + h / 2, z); m.rotation.y = ry ?? Math.PI / 4; return m; }
+function tree(x, z, s) { s = s || 1; const g = new THREE.Group();
+  g.add(box(0.18 * s, 0.5 * s, 0.18 * s, 0x8a5a3a, 0, 0, 0));
+  const c = new THREE.Mesh(new THREE.ConeGeometry(0.45 * s, 0.9 * s, 7), mat(0x3f9d5a)); c.position.y = 0.9 * s; g.add(c);
+  g.position.set(x, 0, z); return g; }
+// ちゃんと車に見える車
+function car(x, z, c, ry) { const g = new THREE.Group();
+  g.add(box(1.7, 0.36, 0.8, c, 0, 0.2, 0));                       // ボディ
+  g.add(box(0.95, 0.4, 0.72, c, -0.1, 0.56, 0));                   // キャビン
+  g.add(box(0.7, 0.28, 0.74, 0x25334a, -0.1, 0.62, 0));            // 窓
+  g.add(box(0.05, 0.1, 0.16, 0xfff1a0, 0.86, 0.32, 0.25)); g.add(box(0.05, 0.1, 0.16, 0xfff1a0, 0.86, 0.32, -0.25));   // ヘッドライト
+  g.add(box(0.05, 0.08, 0.16, 0xe53935, -0.86, 0.34, 0.25)); g.add(box(0.05, 0.08, 0.16, 0xe53935, -0.86, 0.34, -0.25)); // テールライト
+  [-0.55, 0.55].forEach(dx => [-0.42, 0.42].forEach(dz => {
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.12, 14), mat(0x222222)); w.rotation.x = Math.PI / 2; w.position.set(dx, 0.19, dz); g.add(w);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.13, 10), mat(0xbbbbbb)); hub.rotation.x = Math.PI / 2; hub.position.set(dx, 0.19, dz); g.add(hub);
+  }));
+  g.position.set(x, 0, z); g.rotation.y = ry || 0; return g; }
+function house(x, z, w, floors, wall, roofC) { const g = new THREE.Group(); const h = 0.85 * floors;
+  g.add(box(w, h, w * 0.9, wall, 0, 0, 0)); g.add(roof(w * 0.78, 0.65, roofC, 0, h, 0));
+  for (let f = 0; f < floors; f++) { g.add(box(0.26, 0.3, 0.05, 0x9fd3ff, -w * 0.27, 0.32 + f * 0.85, w * 0.45)); g.add(box(0.26, 0.3, 0.05, 0x9fd3ff, w * 0.27, 0.32 + f * 0.85, w * 0.45)); }
+  g.add(box(0.3, 0.46, 0.05, 0x7a4a2a, 0, 0, w * 0.45));
+  g.position.set(x, 0, z); return g; }
+function apartment(x, z) { const g = new THREE.Group();                 // 飾りのない質素な箱
+  g.add(box(1.3, 1.7, 1.1, 0xcfc8bb, 0, 0, 0)); g.add(box(1.4, 0.08, 1.2, 0x8a8478, 0, 1.7, 0));
+  for (let f = 0; f < 2; f++) for (let k = -1; k <= 1; k++) g.add(box(0.2, 0.24, 0.04, 0x8fb8d8, k * 0.38, 0.3 + f * 0.8, 0.55));
+  g.add(box(0.14, 0.9, 0.5, 0x8a8478, 0.75, 0, 0)); g.add(box(0.5, 0.05, 0.9, 0xffffff, 0, 0.001, 0.9));   // 外階段・洗濯物
+  g.position.set(x, 0, z); return g; }
+function tower(x, z, w, h, c) { const g = new THREE.Group(); g.add(box(w, h, w, c, 0, 0, 0));
+  for (let f = 0.5; f < h - 0.3; f += 0.55) for (let k = -1; k <= 1; k++) g.add(box(0.16, 0.22, 0.03, 0xbfe6ff, k * w * 0.3, f, w / 2));
+  g.add(box(w * 0.5, 0.25, w * 0.5, 0x8fa3b8, 0, h, 0)); g.position.set(x, 0, z); return g; }
+
+function rebuildTown(t) {
+  if (!townGroup) return;
+  while (townGroup.children.length) townGroup.remove(townGroup.children[0]);
+  const G = townGroup;
+  if (t === 0) { G.add(roof(1.25, 1.3, 0xf2b84b, 0, 0, 0, 0)); G.add(box(0.5, 0.2, 0.5, 0x6b4a2a, 1.3, 0, 0.9)); G.add(roof(0.28, 0.5, 0xff7a3a, 1.3, 0.2, 0.9, 0)); G.add(tree(-2.3, 1.0, 1.0)); }
+  if (t === 1) { G.add(apartment(0, 0)); G.add(tree(-2.2, 1.2, 1.0)); }
+  if (t === 2) { G.add(house(0, 0, 2.2, 2, 0xfff1d6, 0xd6604d)); G.add(box(0.7, 0.03, 1.6, 0xd9d2c5, 0, 0, 1.8)); G.add(tree(-2.3, 1.3)); G.add(tree(2.3, 1.0)); G.add(tree(1.6, -2.2, 0.8)); }
+  if (t === 3) { G.add(house(-0.4, -0.4, 2.2, 2, 0xfff1d6, 0xd6604d)); G.add(car(1.9, 1.5, 0x4f8ff7, 0.3)); G.add(box(0.9, 0.03, 2.2, 0x9a9a9a, 1.9, 0, 1.3));
+    G.add(box(4.8, 0.28, 0.08, 0xffffff, 0, 0, 2.8)); G.add(tree(-2.6, 1.5)); G.add(tree(2.9, -1.2)); G.add(tree(-2.2, -2.4, 0.8)); }
+  if (t === 4) { G.add(house(-0.5, -0.3, 2.6, 2, 0xfaf3e0, 0x8b5cf6)); G.add(car(2.2, 1.8, 0xe53935, 0.2)); G.add(box(1.0, 0.03, 2.4, 0x9a9a9a, 2.2, 0, 1.4));
+    G.add(box(1.7, 0.06, 1.1, 0x5ccff0, 2.2, 0, -1.7)); G.add(box(4.8, 0.28, 0.08, 0xffffff, 0, 0, 3.1)); G.add(tree(-3.0, 1.8, 1.1)); G.add(tree(-2.6, -2.2)); G.add(tree(3.4, 0.2, 0.9)); }
+  if (t === 5) { G.add(tower(0, -0.5, 1.6, 4.6, 0x9db7d5)); G.add(house(-2.6, 1.6, 1.3, 1, 0xfff1d6, 0xd6604d)); G.add(house(2.6, 1.6, 1.3, 1, 0xfff1d6, 0x6b7b8f));
+    G.add(car(-1.2, 2.7, 0xf5c542, 0)); G.add(car(1.4, 2.7, 0x4f8ff7, 0)); G.add(tree(-3.4, -1.6)); G.add(tree(3.4, -1.6)); }
+  if (t === 6) { G.add(tower(0, -0.8, 1.5, 5.4, 0xa7c4e6)); G.add(tower(-2.4, 0.2, 1.2, 3.6, 0xc9b6ec)); G.add(tower(2.4, 0.2, 1.2, 4.2, 0xf6c9a8));
+    G.add(house(-2.2, 2.6, 1.0, 1, 0xfff1d6, 0xd6604d)); G.add(house(2.2, 2.6, 1.0, 1, 0xfff1d6, 0x6b7b8f));
+    G.add(car(-0.9, 3.1, 0xf5c542, 0)); G.add(car(0.9, 3.1, 0xe53935, 0)); G.add(tree(-4.2, -1.2, 0.9)); G.add(tree(4.2, -1.2, 0.9)); G.add(tree(0, 3.9, 0.7)); }
+  tier = t; popT = 1;
+  document.getElementById("townLabel").textContent = TIERS[t].label;
+}
+// 土 → 草がまばらに → 芝生
+function setGrass(p) {
+  if (!grassGroup) return;
+  groundMat.color.set(lerpColor("#9a7b5a", "#7fc97a", p));
+  const n = Math.floor(p * GRASS_POS.length);
+  if (n === grassN) return; grassN = n;
+  while (grassGroup.children.length) grassGroup.remove(grassGroup.children[0]);
+  const vis = p < 0.98 ? n : 0;   // 芝生になりきったら草の房は消す
+  for (let i = 0; i < vis; i++) { const [x, z] = GRASS_POS[i];
+    const tuft = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.22, 4), mat(0x5fb865)); tuft.position.set(x, 0.1, z); grassGroup.add(tuft); }
+}
+// 朝 → 昼 → 午後 → 夕暮れ (年齢で変わる空)
+const SKY = [
+  { age: 20, top: "#5b8fd6", mid: "#8fb8e8", bot: "#ffd9a8", sun: "#fff2d0", amb: 0.78 },
+  { age: 35, top: "#2b6fbf", mid: "#4f9fe0", bot: "#a8dcf5", sun: "#ffffff", amb: 0.85 },
+  { age: 50, top: "#3d6fb0", mid: "#7fa8d8", bot: "#ffcf9a", sun: "#ffe4b8", amb: 0.75 },
+  { age: 65, top: "#3a3f7a", mid: "#c0607a", bot: "#ffb060", sun: "#ffb070", amb: 0.62 }
+];
+function setSky(age) {
+  let a = SKY[0], b = SKY[SKY.length - 1], t = 1;
+  for (let i = 0; i < SKY.length - 1; i++) if (age >= SKY[i].age && age <= SKY[i + 1].age) { a = SKY[i]; b = SKY[i + 1]; t = (age - a.age) / (b.age - a.age); break; }
+  if (!townEl.classList.contains("crash")) townEl.style.background = `linear-gradient(${lerpColor(a.top, b.top, t)} 0%, ${lerpColor(a.mid, b.mid, t)} 45%, ${lerpColor(a.bot, b.bot, t)} 100%)`;
+  if (sun) { sun.color.set(lerpColor(a.sun, b.sun, t)); ambient.intensity = lerp(a.amb, b.amb, t); }
+}
+function render3D() {
+  if (!renderer) return;
+  tGlobal += 0.016;
+  camAngle += 0.0038 * (0.3 + 0.7 * (0.5 + 0.5 * Math.sin(tGlobal * 0.33)));   // 緩急のある回転
+  // 段階ごとのカメラ距離・高さ・注視点 (家が大きくなるほど引く)
+  const CAM = [[4.6, 2.3, 0.9], [4.8, 2.4, 0.9], [6.4, 3.1, 1.0], [7.0, 3.4, 1.0], [7.8, 3.9, 1.1], [8.8, 4.7, 1.6], [10.0, 5.5, 2.0]];
+  const [R, hgt, lookY] = CAM[Math.max(0, tier)];
+  camera.position.set(Math.sin(camAngle) * R, hgt, Math.cos(camAngle) * R);
+  if (shakeT > 0) { shakeT -= 0.016; camera.position.x += (Math.random() - 0.5) * 0.35 * shakeT; camera.position.y += (Math.random() - 0.5) * 0.35 * shakeT; }
+  camera.lookAt(0, lookY, 0);
+  if (popT > 0) { popT = Math.max(0, popT - 0.03); const s = 1 - popT * popT; townGroup.scale.set(s, s, s); }
+  renderer.setClearColor(0x000000, 0);
+  renderer.render(scene, camera);
+}
+
+// ---------- 演出 ----------
+let toastTimer = 0;
+function toast(msg, ms) {
+  const el = document.getElementById("toast"); el.textContent = msg; el.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("on"), ms || 2200);
+}
+function confetti() {
+  const colors = ["#f5c542", "#2fb69e", "#ff7fa8", "#4f8ff7", "#fff"];
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement("span"); s.className = "confetti";
+    s.style.left = rand(5, 95) + "%"; s.style.background = pick(colors); s.style.animationDelay = rand(0, 0.5) + "s";
+    townEl.appendChild(s); setTimeout(() => s.remove(), 2200);
+  }
+}
+
+// ---------- UI ----------
+const $ = id => document.getElementById(id);
+const cardEl = $("card");
+function updateHud() {
+  $("age").textContent = S.age;
+  $("assets").textContent = fmtMan(S.assets);
+  $("mHappy").style.width = S.happy + "%";
+  $("mKnow").style.width = S.know + "%";
+  const maxT = Math.max(0.5, S.income * 0.4 / 12);
+  $("mTsumi").style.width = clamp(S.tsumi / maxT * 100, 0, 100) + "%";
+  $("tsumiLabel").textContent = S.tsumi > 0 ? Math.round(S.tsumi * 10) / 10 + "万円" : "0円";
+  $("progBar").style.width = (S.turn / TURNS * 100) + "%";
+  setSky(S.age);
+  setGrass(clamp((S.assets - 30) / 570, 0, 1));
+  // 家の段階: 上がるときはすぐ、下がるときは2割余裕を持たせる(行ったり来たり防止)
+  const t = tierOf(S.assets);
+  if (tier < 0) rebuildTown(t);
+  else if (t > tier) { rebuildTown(t); confetti(); sUpgrade(); toast("🎉 新しい家に引っ越し! " + TIERS[t].label, 2600); }
+  else if (t < tier && S.assets < TIERS[tier].min * 0.8) { rebuildTown(t); sDown(); toast("📉 資産が減って引っ越し… " + TIERS[t].label, 2600); }
+}
+let current = null, dragging = false, dx0 = 0, dy0 = 0, dx = 0;
+function showCard(c) {
+  current = c;
+  cardEl.className = "card";
+  cardEl.style.transform = "";
+  cardEl.innerHTML = `<span class="tag">${c.tag}</span><div class="icon">${c.icon}</div><h2>${c.title}</h2><p>${c.text}</p>
+    <div class="choices"><button class="l">${c.l.label.replace("\n", "<br>")}</button><button class="r">${c.r.label.replace("\n", "<br>")}</button></div>
+    <div class="stamp l">${c.l.label.split("\n")[0]}</div><div class="stamp r">${c.r.label.split("\n")[0]}</div>`;
+  cardEl.querySelector(".choices .l").onclick = () => choose("l");
+  cardEl.querySelector(".choices .r").onclick = () => choose("r");
+  $("hintL").textContent = "◀ " + c.l.label.split("\n")[0];
+  $("hintR").textContent = c.r.label.split("\n")[0] + " ▶";
+  requestAnimationFrame(() => { cardEl.style.transition = "transform .35s"; cardEl.style.transform = "translateY(0) scale(1)"; });
+}
+function choose(side) {
+  if (!current) return;
+  const opt = current[side];
+  const c = current; current = null;
+  sSwipe();
+  cardEl.style.transition = "transform .3s, opacity .3s";
+  cardEl.style.transform = `translateX(${side === "l" ? -140 : 140}%) rotate(${side === "l" ? -20 : 20}deg)`;
+  cardEl.style.opacity = "0";
+  S.used.add(c.id);
+  S.history.push({ id: c.id, side });
+  const d = applyFx(opt.fx);
+  if (opt.fx.panic || opt.fx.held) { shakeT = 1.2; S.crashes++; townEl.classList.add("crash");
+    townEl.style.background = "linear-gradient(#3a1a2c 0%, #5a2438 50%, #7a3a3a 100%)";
+    setTimeout(() => { townEl.classList.remove("crash"); setSky(S.age); }, 2600); }
+  if (opt.fx.bigGamble || opt.fx.gamble) shakeT = 0.5;
+  setTimeout(() => { cardEl.style.transition = "none"; cardEl.style.opacity = "1"; showTip(c, opt, d); }, 300);
+}
+function showTip(c, opt, d) {
+  const nextAge = ageAt(S.turn + 1);
+  cardEl.className = "card tip";
+  cardEl.style.transform = "scale(.96)";
+  const sign = v => (v > 0 ? "+" : "") + v;
+  const parts = [];
+  if (Math.abs(d.assets) >= 1) parts.push(`<span>💰 ${sign(Math.round(d.assets))}万円</span>`);
+  if (d.happy) parts.push(`<span>😊 ${sign(d.happy)}</span>`);
+  if (d.know) parts.push(`<span>📚 ${sign(d.know)}</span>`);
+  if (Math.abs(d.tsumi) >= 0.1) parts.push(`<span>積立 ${sign(Math.round(d.tsumi * 10) / 10)}万円/月</span>`);
+  cardEl.innerHTML = `<div class="icon">💡</div><h2>${c.title} → 「${opt.label.replace("\n", "")}」</h2><p>${opt.tip}</p>
+    <div class="delta">${parts.join("") || "<span>変化なし</span>"}</div><button class="next">次へ (${nextAge}歳まで進む)</button>`;
+  cardEl.querySelector(".next").onclick = advance;
+  updateHud();
+  requestAnimationFrame(() => { cardEl.style.transition = "transform .25s"; cardEl.style.transform = "scale(1)"; });
+}
+function advance() {
+  const years = ageAt(S.turn + 1) - S.age;
+  simulateYears(years);
+  S.turn++; S.age = ageAt(S.turn);
+  updateHud();
+  if (S.turn >= TURNS) { setTimeout(showResult, 500); return; }
+  cardEl.style.transition = "none"; cardEl.style.transform = "translateY(40px) scale(.9)";
+  showCard(nextCard());
+}
+cardEl.addEventListener("pointerdown", e => {
+  if (!current || e.target.tagName === "BUTTON") return;
+  dragging = true; dx0 = e.clientX; dy0 = e.clientY; dx = 0;
+  cardEl.setPointerCapture(e.pointerId); cardEl.style.transition = "none";
+});
+cardEl.addEventListener("pointermove", e => {
+  if (!dragging) return;
+  dx = e.clientX - dx0; const dy = (e.clientY - dy0) * 0.3;
+  cardEl.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx * 0.06}deg)`;
+  const k = clamp(Math.abs(dx) / 90, 0, 1);
+  cardEl.querySelector(".stamp.l").style.opacity = dx < 0 ? k : 0;
+  cardEl.querySelector(".stamp.r").style.opacity = dx > 0 ? k : 0;
+  $("hintL").classList.toggle("on", dx < -30); $("hintR").classList.toggle("on", dx > 30);
+});
+function endDrag() {
+  if (!dragging) return; dragging = false;
+  $("hintL").classList.remove("on"); $("hintR").classList.remove("on");
+  if (dx < -90) choose("l"); else if (dx > 90) choose("r");
+  else { cardEl.style.transition = "transform .3s"; cardEl.style.transform = ""; cardEl.querySelectorAll(".stamp").forEach(s => s.style.opacity = 0); }
+}
+cardEl.addEventListener("pointerup", endDrag); cardEl.addEventListener("pointercancel", endDrag);
+addEventListener("keydown", e => { if (!current) return; if (e.key === "ArrowLeft") choose("l"); if (e.key === "ArrowRight") choose("r"); });
+
+// ---------- 結果 ----------
+function typeOf() {
+  const avgRisk = S.riskN ? S.riskSum / S.riskN : 0.5;
+  if (S.panics >= 2) return ["🌪 気まぐれトレーダー", "暴落のたびに売ってしまうタイプ。次は「暴落=セール」と唱えてみて。"];
+  if (S.gambles >= 2) return ["🎰 一発逆転ギャンブラー", "スリルを楽しむタイプ。本体の積立と「遊び枠」を分けると、運に人生を預けずに済みます。"];
+  if (avgRisk < 0.3) return ["🛡 慎重な貯蓄家", "守りが得意。ただインフレの時代、少しだけ攻めの割合を持つと守りも強くなります。"];
+  if (S.know >= 70) return ["🎓 学びの投資家", "知識で相場を乗りこなすタイプ。あなたの解説を待っている初心者がきっといます。"];
+  if (avgRisk >= 0.7) return ["🚀 攻めの成長投資家", "リスクを取れる胆力の持ち主。年齢とともに少しずつ守りを混ぜていくのが長生きのコツ。"];
+  return ["🌳 堅実な長期投資家", "淡々と続ける、いちばん再現性の高いスタイル。この調子で。"];
+}
+function benchmark() { let a = 0; for (let y = 0; y < AGE1 - AGE0; y++) a = a * 1.05 + 36; return a; }
+let lastShare = "";
+function showResult() {
+  const [type, comment] = typeOf();
+  const bm = benchmark();
+  $("rcard").innerHTML = `
+    <div style="font-size:12px;color:#7f90a8">あなたの投資人生 (20歳→65歳)</div>
+    <div class="type">${type}</div>
+    <div style="font-size:12px;color:#7f90a8;margin-top:8px">65歳時点の資産</div>
+    <div class="big">${fmtMan(S.assets)}</div>
+    <div class="row"><span>暮らしている家</span><b>${TIERS[tierOf(S.assets)].label}</b></div>
+    <div class="row"><span>積立を続けた年数</span><b>${S.contYears}年</b></div>
+    <div class="row"><span>暴落で売った回数</span><b>${S.panics}回</b></div>
+    <div class="row"><span>一発狙いの回数</span><b>${S.gambles}回</b></div>
+    <div class="row"><span>しあわせ度 / 知識</span><b>${Math.round(S.happy)} / ${Math.round(S.know)}</b></div>
+    <div class="cmp">📊 参考: 毎月3万円を45年間、年5%で淡々と積み立てた場合 → <b>${fmtMan(bm)}</b><br>
+      ${S.assets >= bm ? "あなたはそれを上回りました!" : "続ける力だけで、ここまで届きます。"}</div>
+    <div class="note">${comment}</div>`;
+  lastShare = `【投資人生ゲーム】\n私の投資家タイプは「${type}」\n65歳時点の資産: ${fmtMan(S.assets)}(${TIERS[tierOf(S.assets)].label})\n暴落で売った回数: ${S.panics}回\n\nあなたはどうなる? → ${location.href.split("?")[0]}`;
+  $("result").style.display = "flex";
+}
+$("shareBtn").onclick = async () => {
+  try { if (navigator.share) { await navigator.share({ text: lastShare }); return; } } catch (e) {}
+  try { await navigator.clipboard.writeText(lastShare); $("shareBtn").textContent = "コピーしました ✓"; } catch (e) { prompt("コピーしてシェアしてください", lastShare); }
+};
+$("againBtn").onclick = () => { $("result").style.display = "none"; startGame(); };
+$("startBtn").onclick = () => { $("title").style.display = "none"; startGame(); };
+$("aboutBtn").onclick = () => { $("about").style.display = "flex"; };
+$("aboutClose").onclick = () => { $("about").style.display = "none"; };
+
+function startGame() {
+  S = newState();
+  crashTurns = [Math.floor(rand(5, 10)), Math.floor(rand(13, 19))];
+  $("shareBtn").textContent = "結果をシェア";
+  tier = -1; grassN = -1; updateHud();
+  cardEl.style.transform = "translateY(40px) scale(.9)";
+  showCard(nextCard());
+}
+
+init3D();
+S = newState(); updateHud();
+window.__game = { get S() { return S; }, choose, advance, startGame, showResult, get current() { return current; }, get tier() { return tier; }, CARDS };
+</script>
+</body>
+</html>
