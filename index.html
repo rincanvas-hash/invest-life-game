@@ -94,12 +94,25 @@
   #progress { width: 100%; max-width: 340px; height: 4px; background: rgba(29,42,61,0.12); border-radius: 2px; margin-top: 12px; overflow: hidden; }
   #progress i { display: block; height: 100%; width: 0; background: var(--gold); transition: width .4s; }
 
+  /* ---- タイトル（街が育つ背景） ---- */
+  #app.title-mode #hud, #app.title-mode #meters, #app.title-mode #deck { display: none; }
+  #app.title-mode #town { flex: 1 1 auto; max-height: none; min-height: 0; margin: 0; border-radius: 0; box-shadow: none; }
+  #app.title-mode #townLabel { bottom: auto; top: max(14px, env(safe-area-inset-top)); left: 14px; font-size: 13px; }
+  #title { background: linear-gradient(180deg, rgba(234,240,248,0) 0%, rgba(234,240,248,0) 34%, rgba(234,240,248,.72) 48%, rgba(234,240,248,.97) 60%, rgba(234,240,248,1) 100%);
+    justify-content: flex-end; padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+  #title h1 { font-size: 34px; letter-spacing: .04em; margin: 0 0 4px; text-shadow: 0 2px 10px rgba(255,255,255,.9); }
+  #title h1 em { font-style: normal; color: var(--gold); }
+  #title .sub { margin-bottom: 14px; }
+  .tlogo { font-size: 13px; letter-spacing: .3em; color: #7f90a8; margin-bottom: 2px; }
   /* ---- オーバーレイ ---- */
   .overlay { position: absolute; inset: 0; background: rgba(234,240,248,0.94); z-index: 10; display: flex; flex-direction: column;
     align-items: center; justify-content: center; padding: 24px; text-align: center; }
   .overlay h1 { font-size: 30px; margin: 0 0 8px; }
   .overlay .sub { color: #4a5a72; font-size: 14px; line-height: 1.7; margin-bottom: 22px; }
   .overlay button { border: 0; border-radius: 14px; padding: 15px 30px; font-size: 17px; font-weight: 700; background: var(--accent); color: #fff; cursor: pointer; margin: 6px; }
+  .overlay button.choice { padding: 14px 16px; font-size: inherit; font-weight: 400; background: #fff; color: var(--ink); border: 2px solid #d7e0ec; }
+  .overlay button.choice.main { border-color: var(--accent); background: linear-gradient(180deg, #fff, #eefaf5); }
+  .overlay .links button { background: none; border: 0; color: #55657f; text-decoration: underline; font-size: 13px; padding: 6px 8px; font-weight: 500; }
   .overlay button.ghost { background: transparent; border: 2px solid #b7c4d6; color: var(--ink); font-size: 14px; padding: 11px 20px; }
   #result { display: none; overflow-y: auto; justify-content: flex-start; padding-top: max(24px, env(safe-area-inset-top)); }
   .rcard { background: #fff; color: var(--ink); border-radius: 18px; padding: 20px; width: 100%; max-width: 360px; text-align: left; box-shadow: 0 12px 30px rgba(29,42,61,0.18); }
@@ -116,12 +129,47 @@
   .about li { margin-bottom: 6px; }
   .about .small { font-size: 13px; color: #6f7f96; }
   .about button { width: 100%; margin: 10px 0 0; }
+  /* 住民 */
+  .btnrow { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+  #pick, #album { z-index: 12; overflow-y: auto; justify-content: flex-start; padding-top: max(24px, env(safe-area-inset-top)); }
+  #quitBtn { align-self: center; font-size: 12px; padding: 6px 12px; border-radius: 999px; border: 1.5px solid #b7c4d6;
+    background: rgba(255,255,255,.9); color: var(--muted); cursor: pointer; display: none; font-family: inherit; }
+  /* タイトル: 2つの入口をカードに、それ以外は文字リンクに */
+  .choice { display: flex; align-items: center; gap: 14px; width: 100%; max-width: 340px; text-align: left;
+    background: #fff; border: 2px solid #d7e0ec; border-radius: 18px; padding: 14px 16px; margin: 0 0 10px; cursor: pointer;
+    box-shadow: 0 8px 22px rgba(29,42,61,0.08); font-family: inherit; color: var(--ink); }
+  .choice.main { border-color: var(--accent); background: linear-gradient(180deg, #fff, #eefaf5); }
+  .choice .ic { font-size: 34px; flex: 0 0 auto; }
+  .choice b { display: block; font-size: 17px; }
+  .choice small { display: block; font-size: 12px; color: #6f7f96; line-height: 1.5; margin-top: 2px; }
+  .choice .faces { display: flex; gap: 2px; margin-top: 4px; }
+  .choice .faces img { width: 22px; height: 22px; }
+  .choice .go { margin-left: auto; font-size: 20px; color: #9aa8bb; }
+  .choice:active { transform: translateY(1px); }
+  .links { margin-top: 6px; font-size: 13px; }
+  .links button { background: none; border: 0; color: #55657f; text-decoration: underline; font-size: 13px; padding: 6px 8px; cursor: pointer; font-family: inherit; }
+  .overlay button.alt { background: #fff; color: var(--ink); border: 2px solid var(--accent); }
+  .rgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 360px; margin: 10px 0 14px; }
+  .rc { background: #fff; border-radius: 14px; padding: 10px 8px; cursor: pointer; border: 2px solid transparent; text-align: center;
+    box-shadow: 0 6px 16px rgba(29,42,61,0.08); position: relative; }
+  .rc img { width: 64px; height: 64px; display: block; margin: 0 auto 4px; }
+  .rc b { display: block; font-size: 14px; }
+  .rc small { display: block; font-size: 11px; color: #6f7f96; line-height: 1.45; }
+  .rc .you { position: absolute; top: 6px; left: 6px; font-size: 10px; background: var(--gold); color: #fff; border-radius: 999px; padding: 1px 7px; }
+  .rc .ok { position: absolute; top: 6px; right: 6px; font-size: 14px; }
+  .rc.dim img { filter: grayscale(1); opacity: .45; }
+  .rc.sel { border-color: var(--accent); }
+  .reshead { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #55657f; margin-bottom: 4px; }
+  .reshead img { width: 30px; height: 30px; }
+  .ovh2 { font-size: 20px; margin: 0 0 4px; }
+  .ovsub { font-size: 13px; color: #4a5a72; margin: 0 0 6px; line-height: 1.6; }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="hud">
     <div class="age">現在 <b id="age">20</b> 歳</div>
+    <button id="quitBtn">✕ やめる</button>
     <div class="assets"><small>資産</small><b id="assets">30万円</b></div>
   </div>
   <div id="meters">
@@ -137,11 +185,22 @@
   </div>
 
   <div class="overlay" id="title">
-    <div style="font-size:56px">🏡📈</div>
-    <h1>投資人生ゲーム</h1>
+    <div class="tlogo">INVEST LIFE</div>
+    <h1>投資<em>人生</em>ゲーム</h1>
     <div class="sub">人生にやってくるお金の出来事に、スワイプで答えるだけ。<br>あなたの選択で、資産と街はどう育つ?<br><b>所要時間 約3分</b></div>
-    <button id="startBtn">はじめる</button>
-    <div><button class="ghost" id="aboutBtn">このゲームについて</button></div>
+    <button class="choice main" id="startBtn">
+      <span class="ic">🎲</span>
+      <span><b>選ばないで遊ぶ</b><small>いつもの人生。はじめての人はこちら</small></span>
+      <span class="go">›</span>
+    </button>
+    <button class="choice" id="pickBtn">
+      <span class="ic">🦊</span>
+      <span><b>住民から選ぶ</b><small>スタート条件がちがう6匹。全員の人生を集めよう</small>
+        <span class="faces"><img src="assets/residents/r-G.png" alt=""><img src="assets/residents/r-L.png" alt=""><img src="assets/residents/r-S.png" alt=""><img src="assets/residents/r-K.png" alt=""><img src="assets/residents/r-T.png" alt=""><img src="assets/residents/r-B.png" alt=""></span></span>
+      <span class="go">›</span>
+    </button>
+    <div class="links"><button id="albumBtn">🏡 人生アルバム <span id="albumN"></span></button>・<button id="aboutBtn">このゲームについて</button></div>
+    <div class="links" style="margin-top:0"><a href="https://rincanvas-hash.github.io/okane-kuse/" target="_blank" rel="noopener" style="color:#55657f;font-size:13px">🦊 自分に似ている住民を知る → お金のクセ診断</a></div>
     <div class="fine">※楽しむためのゲームです。投資を勧めるものではありません。</div>
   </div>
 
@@ -160,10 +219,26 @@
     </div>
   </div>
 
+  <div class="overlay" id="pick" style="display:none">
+    <h2 class="ovh2">住民を選んで遊ぶ</h2>
+    <p class="ovsub">住民によって、スタートの貯金や株の割合が違います。<br>6匹ぶんの人生をそろえると、アルバムが埋まります。<br>
+      <a href="https://rincanvas-hash.github.io/okane-kuse/" target="_blank" rel="noopener" style="color:#55657f">自分に似ている住民は？ → お金のクセ診断</a></p>
+    <div class="rgrid" id="rgrid"></div>
+    <button class="ghost" id="pickClose">もどる</button>
+  </div>
+
+  <div class="overlay" id="album" style="display:none">
+    <h2 class="ovh2">🏡 人生アルバム</h2>
+    <p class="ovsub">住民で遊ぶと、その住民の人生がここに残ります。</p>
+    <div class="rgrid" id="agrid"></div>
+    <button class="ghost" id="albumClose">もどる</button>
+  </div>
+
   <div class="overlay" id="result">
     <div class="rcard" id="rcard"></div>
     <div style="margin-top:14px">
       <button id="shareBtn">結果をシェア</button>
+      <button class="alt" id="nextResBtn" style="display:none">次の住民で遊ぶ</button>
       <button class="ghost" id="againBtn">もう一度</button>
     </div>
     <div class="fine">※ゲームの結果です。将来の成果を示すものではありません。</div>
@@ -207,14 +282,36 @@ const sDown = () => [440, 370, 311].forEach((f, i) => beep(f, 0.3, i * 0.12, 0.0
 const sSwipe = () => beep(660, 0.08, 0, 0.04);
 addEventListener("pointerdown", () => audio(), { once: true });
 
+// ---------- 住民（お金のクセ診断の6匹。スタート条件が違う） ----------
+const RESIDENTS = {
+  G: { name: "きつね",   emoji: "🦊", title: "チャンスを探す行動派",     trait: "株の割合が多めでスタート",         start: { risk: 0.7, happy: 62 } },
+  L: { name: "パンダ",   emoji: "🐼", title: "コツコツ続ける積み重ね派", trait: "積立をすでに始めた状態でスタート", start: { tsumi: 1, assets: 40 } },
+  S: { name: "ハリネズミ", emoji: "🦔", title: "安心を大切にする慎重派",   trait: "貯金多め・株少なめでスタート",     start: { assets: 60, risk: 0.3 } },
+  K: { name: "フクロウ", emoji: "🦉", title: "納得して進む研究派",       trait: "知識が多めでスタート",             start: { know: 40 } },
+  T: { name: "青い鳥",   emoji: "🐦", title: "変化に敏感なアンテナ派",   trait: "しあわせ高め・株やや多め",         start: { happy: 72, risk: 0.6, know: 15 } },
+  B: { name: "黒ねこ",   emoji: "🐈‍⬛", title: "大きな夢を描く冒険派",     trait: "株の割合が最も多く、貯金は少なめ", start: { risk: 0.8, assets: 20, happy: 66 } }
+};
+const RES_ORDER = ["G", "L", "S", "K", "T", "B"];
+const ALBUM_KEY = "ilAlbum";
+let album = {};
+try { album = JSON.parse(localStorage.getItem(ALBUM_KEY) || "{}"); } catch (e) {}
+function saveAlbum() { try { localStorage.setItem(ALBUM_KEY, JSON.stringify(album)); } catch (e) {} }
+/* お金のクセ診断（同じサイト内）の結果があれば、その住民を「診断のあなた」として目立たせる */
+function diagnosedRes() {
+  try { const o = JSON.parse(localStorage.getItem("okanekuse") || "{}"); const m = o.results && o.results.base && o.results.base.main; return RESIDENTS[m] ? m : null; } catch (e) { return null; }
+}
+let chosenRes = null;   // 今回のプレイで選んだ住民（null=選ばない）
+
 // ---------- 状態 ----------
 let S;
 function newState() {
-  return {
+  const st = {
     turn: 0, age: AGE0, assets: 30, income: 280, tsumi: 0, risk: 0.5, happy: 60, know: 20,
     panics: 0, gambles: 0, contYears: 0, riskSum: 0, riskN: 0,
-    fee: 0, held: false, lever: false, used: new Set(), history: [], crashes: 0
+    fee: 0, held: false, lever: false, used: new Set(), history: [], crashes: 0, res: chosenRes
   };
+  if (chosenRes && RESIDENTS[chosenRes]) Object.assign(st, RESIDENTS[chosenRes].start);
+  return st;
 }
 const ageAt = turn => Math.round(AGE0 + (AGE1 - AGE0) * turn / TURNS);
 
@@ -279,7 +376,7 @@ const CARDS = [
   { id: "revolving", age: [22, 35], icon: "💳", tag: "誘惑", title: "「リボ払いなら月1万円」", text: "欲しいものがある。カード会社は分割を勧めてくる。",
     l: { label: "リボ払いで\n買う", fx: { assets: -60, happy: 6, know: -3 }, tip: "リボ払いの金利は年15%前後。投資で年15%を安定して出すのは至難の業。つまり逆方向の投資です。" },
     r: { label: "貯めてから\n買う", fx: { happy: 2, know: 5 }, tip: "「買えるまで待つ」だけで金利がゼロに。欲しい気持ちが冷めることもあり、それも節約です。" } },
-  { id: "travel", age: [25, 55], icon: "✈️", tag: "人生", title: "海外旅行に行く?", text: "友人に誘われた。費用は30万円。",
+  { id: "travel", age: [25, 55], icon: "✈️", tag: "人生", group: "travel", title: "海外旅行に行く?", text: "友人に誘われた。費用は30万円。",
     l: { label: "行く!", fx: { assets: -30, happy: 14 }, tip: "経験は資産です。使うと決めたお金は、堂々と使うのが健全な家計。" },
     r: { label: "今回は\n見送る", fx: { happy: -3, assets: 5 }, tip: "見送るのも自由。ただ「使わない理由が不安だけ」なら、一度予算を決めて使ってみて。" } },
   { id: "pet", age: [28, 58], icon: "🐶", tag: "人生", title: "ペットを迎える?", text: "一生でかかる費用は、犬で200〜300万円と言われる。",
@@ -369,6 +466,154 @@ const CARDS = [
   { id: "flat", age: [24, 62], icon: "😴", tag: "相場", title: "3年も横ばい相場", text: "積み立てているのに資産が増えない。やめたくなってきた。",
     l: { label: "つまらないので\nやめる", fx: { tsumiSet: 0, happy: 2, know: -2 }, tip: "横ばいの間に買った分が、次の上昇で一番効きます。やめた人は、その恩恵を受け取れません。" },
     r: { label: "淡々と\n続ける", fx: { know: 6, happy: -1 }, tip: "退屈は長期投資の正常運転。「何も起きない年」を積み重ねた人が、最後に笑います。" } },
+  // ---- 追加49枚（2026-10-19改訂）: 楽しい出来事・30〜40代・今っぽい出来事。need/avoid=前の選択とのつながり、group=1プレイで出す数の上限 ----
+  { id: "hobbywork", age: [30, 50], icon: "🎨", tag: "よろこび", title: "趣味が仕事になりそう", text: "作ったものが売れ始めた。本気でやってみる?",
+    l: { label: "思い切って\n仕事にする", fx: { income: 0.9, happy: 12, risk: 0.05 }, tip: "好きなことが収入になるのは大きなしあわせ。最初の数年は収入が下がりやすいので、生活費の備えがあると挑戦しやすくなります。" },
+    r: { label: "趣味のまま\n気楽に続ける", fx: { happy: 8, know: 2 }, tip: "「売れたら嬉しい」くらいの距離感も、長く楽しむコツのひとつ。仕事にしない自由も、ちゃんとした選択です。" } },
+  { id: "dreamtrip", age: [50, 64], icon: "🗺️", tag: "よろこび", title: "夢だった旅行", text: "ずっと行きたかった場所。費用は80万円。", group: "travel",
+    l: { label: "今年、行く!", fx: { assets: -80, happy: 18 }, tip: "使うと決めたお金は、気持ちよく使う。体力があるうちに行ける旅は、時期を選びます。" },
+    r: { label: "3年かけて\n旅行貯金する", fx: { happy: 6, know: 5 }, tip: "目的と期限を決めた貯金は、続きやすい貯金。「旅行用」と名前をつけた口座に分ける人も多いです。" } },
+  { id: "gift", age: [24, 64], icon: "🎁", tag: "よろこび", title: "大切な人に贈り物", text: "お世話になった人へ。何を贈ろう?",
+    l: { label: "予算を決めて\n心をこめて選ぶ", fx: { assets: -10, happy: 10 }, tip: "贈り物の価値は金額だけでは決まりません。予算を先に決めると、選ぶ時間そのものを楽しめます。" },
+    r: { label: "ちょっと\n奮発する", fx: { assets: -40, happy: 14 }, tip: "人のために使うお金は満足が続きやすい、という研究もあります。相手の顔が浮かぶなら、いい使い方です。" } },
+  { id: "live", age: [20, 45], icon: "🎤", tag: "よろこび", title: "推しのライブ、遠征する?", text: "チケットと交通費と宿で5万円。",
+    l: { label: "配信で見る", fx: { assets: -1, happy: 5 }, tip: "配信も立派な参加のしかた。浮いた分を「次の遠征費」として取っておくのも手です。" },
+    r: { label: "遠征する!", fx: { assets: -5, happy: 12 }, tip: "「あの日あの場所にいた」は、あとから買えない思い出。娯楽の予算の中なら、楽しんでいい出費です。" } },
+  { id: "camera", age: [25, 50], icon: "📷", tag: "よろこび", title: "いいカメラが欲しい", text: "25万円。買えば毎週出かけたくなりそう。",
+    l: { label: "レンタルで\n試してみる", fx: { assets: -3, know: 4, happy: 4 }, tip: "高い道具は「借りて試す」と失敗が少なめ。使う頻度が分かってから買うと、納得して選べます。" },
+    r: { label: "買って毎週\n撮りに行く", fx: { assets: -25, happy: 10 }, tip: "道具が「出かける理由」になるなら、それは体験への投資。使い倒せば、十分に価値があります。" } },
+  { id: "parentstrip", age: [30, 55], icon: "🧳", tag: "よろこび", title: "両親を旅行に連れていく", text: "元気なうちに、と思い立った。", group: "travel",
+    l: { label: "奮発して\n温泉旅館へ", fx: { assets: -30, happy: 16 }, tip: "親と旅行できる回数は、思っているより限られます。「いつか」より「今年」を選ぶ人が多いのも、そのためです。" },
+    r: { label: "近場の日帰りに\nする", fx: { assets: -6, happy: 10 }, tip: "遠出でなくても、いっしょに過ごす時間が本体。負担の少ない形なら、来年も続けやすい。" } },
+  { id: "piano", age: [28, 60], icon: "🎹", tag: "よろこび", title: "大人のピアノ教室", text: "月1万円。子どものころの憧れ。",
+    l: { label: "動画で\n独学する", fx: { happy: 4, know: 3 }, tip: "無料で始められる時代。まず独学で「続くか」を確かめてから教室に通う、という順番もあります。" },
+    r: { label: "習い始める", fx: { assets: -10, happy: 9, know: 2 }, tip: "大人の習い事は、仕事と家庭以外の「3つめの居場所」。月1万円で手に入るものとしては、悪くない。" } },
+  { id: "garden", age: [35, 62], icon: "🌻", tag: "よろこび", title: "小さな庭を作る", text: "土を触る時間が欲しくなった。",
+    l: { label: "業者に頼んで\n一気に仕上げる", fx: { assets: -40, happy: 10 }, tip: "時間をお金で買う判断。完成した庭を眺める時間が増えるなら、それもひとつの投資です。" },
+    r: { label: "少しずつ\n自分で手入れ", fx: { assets: -5, happy: 8 }, tip: "「育てる過程」そのものが楽しみになる趣味。お金をかけない時間のほうが、記憶に残ることもあります。" } },
+  { id: "reunion", age: [30, 55], icon: "🥂", tag: "よろこび", title: "同窓会の幹事を頼まれた", text: "手間はかかるが、みんなに会える。",
+    l: { label: "引き受ける", fx: { assets: -5, happy: 9 }, tip: "人とのつながりは、歳を重ねるほど価値を感じやすい資産。幹事の手間は、そこへの投資です。" },
+    r: { label: "参加だけ\nさせてもらう", fx: { happy: 4 }, tip: "無理をしないのも大事。顔を出すだけでも、つながりは保てます。" } },
+  { id: "marathon", age: [25, 55], icon: "🏃", tag: "よろこび", title: "フルマラソンに挑戦", text: "友人に誘われた。練習は半年。",
+    l: { label: "まずは5kmの\n大会から", fx: { happy: 5, know: 2 }, tip: "小さく始めて続ける。運動も投資も、続いた人が遠くまで行きます。" },
+    r: { label: "申し込む!", fx: { assets: -3, happy: 8 }, tip: "目標があると毎日が変わります。健康は、老後資金と同じくらい大事な「資産」。" } },
+  { id: "cafe", age: [22, 60], icon: "☕", tag: "よろこび", title: "週末のカフェ時間", text: "1回800円。ちょっとした息抜き。",
+    l: { label: "ごほうびの\n習慣にする", fx: { assets: -6, happy: 7 }, tip: "「使って満足が残る小さな出費」は、無理に削らなくていい。見直すなら、満足が残らない出費のほうから。" },
+    r: { label: "家で淹れる\n楽しみにする", fx: { assets: -1, happy: 5, know: 2 }, tip: "道具をそろえて淹れる時間も、立派な趣味。年に数万円浮いて、楽しみは減らないこともあります。" } },
+  { id: "donate", age: [28, 64], icon: "🤝", tag: "よろこび", title: "寄付をしてみる?", text: "応援したい活動がある。",
+    l: { label: "今は自分の\n家計を優先", fx: { happy: 1 }, tip: "まず自分の足元を固めるのも、間違いではありません。余裕ができたら、またそのときに。" },
+    r: { label: "少額を\n毎月続ける", fx: { assets: -6, happy: 8, know: 3 }, tip: "誰かのために使うお金は、満足が長持ちしやすいもの。寄付金控除の対象になるものもあります。" } },
+  { id: "anniv", age: [30, 60], icon: "💐", tag: "よろこび", title: "結婚記念日", text: "今年はどう過ごす?", need: {"id": "marry"},
+    l: { label: "レストランで\nお祝い", fx: { assets: -5, happy: 9 }, tip: "「年に1回のぜいたく」は、家計の中にあっていい項目。予算に入れておけば、気兼ねなく楽しめます。" },
+    r: { label: "手作りのごはんと\n手紙", fx: { happy: 10 }, tip: "お金をかけない祝い方が、いちばん記憶に残ることもあります。大事なのは「忘れないこと」。" } },
+  { id: "kidsdream", age: [32, 50], icon: "⚽", tag: "よろこび", title: "子どもの「やりたい!」", text: "習い事を始めたいと言ってきた。月2万円。", need: {"id": "baby", "after": 3},
+    l: { label: "本人の本気を\n見てから", fx: { know: 3, happy: 3 }, tip: "「やりたい」の熱量は、体験教室で確かめられます。始めてから決めるのも、ひとつの見極め方。" },
+    r: { label: "応援して\n習わせる", fx: { assets: -20, happy: 10 }, tip: "子どもの「やりたい」に乗るお金は、後悔が少ない使い道のひとつ。家計の中で「教育費の枠」として扱うと続けやすい。" } },
+  { id: "books", age: [24, 64], icon: "📚", tag: "よろこび", title: "本に囲まれる暮らし", text: "読みたい本が、また増えた。",
+    l: { label: "気になった本は\n買う", fx: { assets: -5, know: 6, happy: 6 }, tip: "本は、比較的安い自己投資。1冊の値段で、誰かの数年分の経験に触れられます。" },
+    r: { label: "図書館を\n使い倒す", fx: { know: 6, happy: 5 }, tip: "図書館は無料で使える知の倉庫。予約して待つ時間も含めて、本との付き合い方のひとつです。" } },
+  { id: "solo", age: [25, 62], icon: "🚶", tag: "よろこび", title: "ひとり旅に出る?", text: "誰にも気をつかわない3日間。", group: "travel",
+    l: { label: "出る!", fx: { assets: -12, happy: 12 }, tip: "ひとりの時間は、自分の「本当に好きなもの」を思い出させてくれます。" },
+    r: { label: "今回は\n家でゆっくり", fx: { happy: 5 }, tip: "出かけなくても休めます。「何もしない休日」も、予定に入れると質が上がります。" } },
+  { id: "birthday", age: [20, 64], icon: "🎂", tag: "よろこび", title: "自分の誕生日", text: "今年は自分に何をあげる?",
+    l: { label: "欲しかったものを\n買う", fx: { assets: -15, happy: 10 }, tip: "年に1回、自分へのごほうび。「使う日」を決めておくと、ほかの日のやりくりが苦になりにくい。" },
+    r: { label: "体験に使う", fx: { assets: -10, happy: 11, know: 2 }, tip: "モノより体験のほうが満足が続きやすい、という研究もあります。思い出は値下がりしません。" } },
+  { id: "family_abroad", age: [36, 52], icon: "🌏", tag: "よろこび", title: "家族で海外へ", text: "子どもが大きくなる前に。全員で60万円。", need: {"id": "baby", "after": 3}, group: "travel",
+    l: { label: "行く。今しか\nない", fx: { assets: -60, happy: 16 }, tip: "家族全員で動ける時期は、意外と短いもの。「使う時期が決まっているお金」は、その時期に使うのが本来の役目です。" },
+    r: { label: "国内の\n大きな旅行に", fx: { assets: -20, happy: 11 }, tip: "行き先より「全員で行った」が残ります。負担の軽い形なら、来年も続けやすい。" } },
+  { id: "promote", age: [32, 48], icon: "🏅", tag: "仕事", title: "昇進の打診", text: "責任は増える。給料も増える。",
+    l: { label: "今の役割を\n続ける", fx: { happy: 6 }, tip: "稼ぐ力を上げる道は昇進だけではありません。今の仕事で余裕を持つのも、長い目では資産になります。" },
+    r: { label: "引き受ける", fx: { income: 1.15, happy: 4 }, tip: "収入が増えたら、増えた分の一部を積立へ。「生活を変えずに投資を増やす」機会のひとつです。" } },
+  { id: "transfer", age: [28, 45], icon: "🚚", tag: "仕事", title: "転勤の辞令", text: "知らない土地。手当はつく。",
+    l: { label: "受ける", fx: { income: 1.05, happy: -2, know: 3 }, tip: "環境を変えると、視野も人脈も広がります。手当分を積立に回すと、転勤が資産になることも。" },
+    r: { label: "断って\n地元に残る", fx: { happy: 5 }, tip: "暮らしの土台を守る選択。収入より「毎日の安心」を選ぶのも、ちゃんとした判断です。" } },
+  { id: "moving", age: [30, 48], icon: "🏘️", tag: "人生", title: "住み替え", text: "手狭になってきた。引っ越す?",
+    l: { label: "広い家へ\n引っ越す", fx: { assets: -60, happy: 8 }, tip: "住居費は家計でいちばん大きい固定費。引っ越しで積立が止まらないか、先に計算しておくと安心です。" },
+    r: { label: "今の家で\n工夫する", fx: { happy: 3, know: 3 }, tip: "収納や家具の見直しで解決することも多い。固定費を上げない工夫は、毎月効き続けます。" } },
+  { id: "friendstart", age: [28, 45], icon: "🚀", tag: "人生", title: "友人が起業、出資を頼まれた", text: "100万円。「絶対うまくいく」と熱い。",
+    l: { label: "出資して\n応援する", fx: { assets: -100, risk: 0.1, happy: 5 }, tip: "応援したい気持ちは大事。ただし出資は「なくなっても困らない額」まで。友情とお金を分けて考えると、関係が長持ちします。" },
+    r: { label: "応援はするが\n出資はしない", fx: { happy: 3, know: 5 }, tip: "口コミや手伝いも立派な応援。お金以外で支える道は、関係を壊しにくい。" } },
+  { id: "lend", age: [25, 55], icon: "🤲", tag: "人生", title: "友人に「お金を貸して」", text: "30万円。困っているのは本当らしい。",
+    l: { label: "貸す", fx: { assets: -30, happy: -3 }, tip: "貸すなら「返ってこなくても困らない額」まで。そう思えない額は、貸さないほうが友情のためかもしれません。" },
+    r: { label: "貸さずに\n別の形で助ける", fx: { know: 4, happy: 2 }, tip: "相談に乗る、制度を一緒に調べる。お金を渡す以外の助け方が、根本の解決になることもあります。" } },
+  { id: "ceremony", age: [30, 60], icon: "🎎", tag: "人生", title: "冠婚葬祭が続く", text: "今年だけで20万円。家計がきつい。",
+    l: { label: "出席も贈り物も\nいつも通りに", fx: { assets: -20, happy: 5 }, tip: "人付き合いの出費は、削りにくくて当然。無理のない範囲で気持ちよく出すなら、それでいい。" },
+    r: { label: "出席を絞って\n気持ちは別の形で", fx: { assets: -8, know: 4, happy: 2 }, tip: "全部に同じ形で応えなくても、気持ちは伝わります。「毎年どこかで来る出費」として予備費を持っておくと、慌てずに済みます。" } },
+  { id: "allowance", age: [35, 58], icon: "👵", tag: "人生", title: "親に仕送りする?", text: "年金だけでは少し苦しいらしい。",
+    l: { label: "まず親の家計を\n一緒に見る", fx: { know: 6, happy: 5 }, tip: "いくら足りないのかが分かると、仕送りの額も期間も決めやすくなります。制度で補える部分が見つかることも。" },
+    r: { label: "毎月決まった額を\n送る", fx: { assets: -25, happy: 8 }, tip: "親を支えるのは大事な使い道。自分の積立を止めない範囲で金額を決めると、長く続けられます。" } },
+  { id: "parentshome", age: [45, 62], icon: "📦", tag: "人生", title: "実家の片づけ", text: "モノがあふれている。どうする?",
+    l: { label: "業者に\n頼む", fx: { assets: -30, happy: 5 }, tip: "時間と体力をお金で買う判断。親との関係を守るために、第三者に任せるのも賢い選択です。" },
+    r: { label: "家族で\n少しずつ", fx: { happy: 7, know: 2 }, tip: "片づけながら昔の話をする時間は、あとから思えば宝物。急がなければ、お金もかかりません。" } },
+  { id: "sabbatical", age: [30, 50], icon: "🌴", tag: "仕事", title: "1か月の長期休暇", text: "取れる制度がある。収入は少し減る。",
+    l: { label: "今は働く", fx: { income: 1.03, happy: -1 }, tip: "働きどきを逃さないのも判断。ただ、休める時期は意外と短い。「いつ休むか」だけは決めておくと安心です。" },
+    r: { label: "1か月、\n休む", fx: { income: 0.95, happy: 14 }, tip: "休んだあとの自分は、少し違う働き方をするものです。一時的な収入減より、得るものが大きいことも。" } },
+  { id: "sidejob_hit", age: [30, 50], icon: "💡", tag: "仕事", title: "副業が当たった", text: "月10万円。本業と両立できる?", need: {"id": "side", "side": "l"},
+    l: { label: "本業を減らして\n副業を育てる", fx: { income: 1.05, risk: 0.05, happy: 8 }, tip: "収入の柱が2本あると、家計は揺れにくくなります。片方が揺れても、もう片方で支えられる。" },
+    r: { label: "副業は\nそのままの規模で", fx: { income: 1.08, happy: 5 }, tip: "広げすぎないのも戦略。副業収入を積立に回せば、生活を変えずに積立に回せるお金が増えます。" } },
+  { id: "night_school", age: [26, 45], icon: "🌙", tag: "学び", title: "社会人向けの学校", text: "2年で100万円。キャリアが変わるかも。",
+    l: { label: "通う", fx: { assets: -100, income: 1.12, know: 8 }, tip: "学ぶ目的、費用、得られる資格や経験を並べて比べてみる。目的がはっきりしているなら、自分への投資は長く効きやすい。" },
+    r: { label: "独学で\n同じ内容を学ぶ", fx: { know: 5, happy: 2 }, tip: "独学の環境は豊かになりました。続ける仕組みを自分で作れるなら、費用を抑えて同じ内容に近づけます。" } },
+  { id: "stay_home", age: [30, 45], icon: "🏡", tag: "仕事", title: "育休・時短で収入が減る", text: "家族の時間は増える。", need: {"id": "baby", "within": 2},
+    l: { label: "積立は減額して\n続ける", fx: { tsumiMul: 0.5, happy: 8, know: 4 }, tip: "減らしても「ゼロにしない」。収入が戻ったら、まず積立から元に戻す。これがあとで効きます。" },
+    r: { label: "この時期は\n積立を休む", fx: { tsumiSet: 0, happy: 8 }, tip: "休むのも選択。ただ再開は「決めた日」に。「落ち着いたら」は、なかなか来ません。" } },
+  { id: "appliances", age: [35, 60], icon: "🔌", tag: "お金", title: "家電がまとめて故障", text: "冷蔵庫と洗濯機が同じ月に。合計30万円。",
+    l: { label: "まとめて\n買い替える", fx: { assets: -30, happy: 4, know: 2 }, tip: "家電の寿命は重なりやすいもの。「10年たったら次の出費が来る」と見込んでおくと、慌てずに済みます。" },
+    r: { label: "必要なものから\n順番に", fx: { assets: -15, know: 4, happy: 2 }, tip: "全部を今そろえなくても暮らせることは多い。予備費の範囲で順番に、も立派なやりくりです。" } },
+  { id: "senior_work", age: [58, 64], icon: "🌱", tag: "仕事", title: "退職後、小さな仕事を始める?", text: "週2日、好きなことで月5万円。", needAny: [{"id": "retire"}, {"id": "fire", "side": "l"}],
+    l: { label: "始めてみる", fx: { assets: 60, happy: 9, know: 3 }, tip: "少しの収入でも、取り崩す額が減ると老後資金は長持ちします。人と会う機会が続くのも、大きな価値。" },
+    r: { label: "完全に引退して\nのんびり", fx: { happy: 8 }, tip: "働かない時間を楽しむのも、積み上げてきた人の権利。やりたいことがあるなら、迷わなくていい。" } },
+  { id: "subsc", age: [24, 60], icon: "📺", tag: "お金", title: "サブスク、全部でいくら?", text: "数えたら8つ入っていた。",
+    l: { label: "使っていない\nものを解約", fx: { assets: 10, know: 4 }, tip: "月500円でも年6,000円。「使っていないのに払っている」出費は、いちばん先に見直せるお金です。" },
+    r: { label: "全部必要。\nそのまま", fx: { happy: 2 }, tip: "使っているなら、それは生活費。年に1回、「本当に使っているか」だけ見直せば十分です。" } },
+  { id: "oshi", age: [20, 50], icon: "💖", tag: "お金", title: "推し活の予算", text: "今年は特に出費が多そう。",
+    l: { label: "出せるだけ\n出す", fx: { assets: -20, happy: 10 }, tip: "好きなものにお金を使えるのは、しあわせなこと。今後の支払いも確かめて、無理のない予算で楽しもう。" },
+    r: { label: "月の上限を\n決める", fx: { happy: 6, know: 4 }, tip: "上限を決めると、気兼ねなく使えるようになります。「予算の中なら全部OK」は、楽しみを守るルールです。" } },
+  { id: "furusato", age: [26, 64], icon: "🍑", tag: "お金", title: "ふるさと納税、やってみる?", text: "手続きは少し面倒そう。",
+    l: { label: "面倒なので\n見送る", fx: {}, tip: "見送っても損はしません。ただ、使える人は毎年「もらえたはずのもの」を逃している計算。一度やれば、2年目からは慣れます。" },
+    r: { label: "上限と手続きを\n確認して使う", fx: { assets: 4, know: 5, happy: 5 }, tip: "控除の上限と手続きの条件を確認して使えば、自己負担は原則2,000円で返礼品が届きます。収入によって上限が違うので、そこだけ先に。" } },
+  { id: "snsrich", age: [22, 60], icon: "📱", tag: "誘惑", title: "SNSで見た「月利10%」", text: "フォロワーの多い人が勧めていた。",
+    l: { label: "少しだけ\n試す", fx: { assets: -50, risk: 0.1 }, tip: "月利10%は、年に2倍以上のペース。それが本当なら、その人は勧めずに自分で全部やっているはずです。" },
+    r: { label: "スルーする", fx: { know: 6 }, tip: "「うますぎる話」を見分ける力は、資産を守る技術のひとつ。スルーできた時点で、守れています。" } },
+  { id: "ai_money", age: [28, 60], icon: "🤖", tag: "お金", title: "AIに家計の相談をしてみた", text: "もっともらしい答えが返ってきた。",
+    l: { label: "言われた通りに\nする", fx: { know: 3 }, tip: "AIの答えは「よくある話」であって「あなたの話」とは限りません。前提が違えば、答えも変わります。" },
+    r: { label: "参考にして\n自分で決める", fx: { know: 6, happy: 2 }, tip: "相談相手が増えるのはいいこと。最後に決めるのが自分なら、AIは心強い味方です。" } },
+  { id: "flea", age: [24, 55], icon: "📦", tag: "お金", title: "使っていないものを売る", text: "フリマアプリで出してみる?",
+    l: { label: "寄付や譲渡に\n出す", fx: { happy: 7 }, tip: "手間を省いて、誰かの役に立つ。「手放す」こと自体が、暮らしを軽くします。" },
+    r: { label: "売る", fx: { assets: 8, happy: 5 }, tip: "部屋が片づいて、少しお金になる。売上を積立に回せば、モノが資産に変わります。" } },
+  { id: "kids_money", age: [34, 48], icon: "🪙", tag: "人生", title: "子どもにお小遣い", text: "どう渡す?", need: {"id": "baby", "after": 4},
+    l: { label: "必要なときに\n渡す", fx: { happy: 3 }, tip: "渡し方に正解はありません。「お金の話を家でする」だけで、子どものお金との付き合い方は変わります。" },
+    r: { label: "定額で渡して\n管理させる", fx: { know: 4, happy: 5 }, tip: "失敗できる金額で、使い方を練習させる。子どもへの、安くて効きやすい投資のひとつです。" } },
+  { id: "checkup", age: [35, 62], icon: "🩺", tag: "人生", title: "人間ドック、受ける?", text: "5万円。忙しいけれど。",
+    l: { label: "年齢に合う検査を\n選んで受ける", fx: { assets: -5, know: 3, happy: 4 }, tip: "検査にも向き不向きがあります。年齢や健康状態に合うものを選べば、安心を買う出費として納得しやすい。" },
+    r: { label: "忙しいので\n来年に", fx: { happy: 1 }, tip: "「来年」が何年も続く人は多い。自治体の検診など、負担の軽いものから予定に入れる手もあります。" } },
+  { id: "solar", age: [35, 60], icon: "☀️", tag: "誘惑", title: "太陽光パネルの営業", text: "「月の電気代が浮きます」と熱心。", need: {"id": "house", "side": "l"},
+    l: { label: "見積もりを\n比べてから", fx: { know: 5 }, tip: "大きな買い物ほど、その場で決めない。相見積もりを取るだけで、数十万円変わることがあります。" },
+    r: { label: "契約する", fx: { assets: -150, happy: 2 }, tip: "合う家もあれば、合わない家もある。「元が取れるまで何年か」を自分で計算してから決めると安心です。" } },
+  { id: "rent_renew", age: [26, 50], icon: "🔑", tag: "お金", title: "賃貸の更新時期", text: "家賃は少し高い気がしている。", avoid: {"id": "house", "side": "l"},
+    l: { label: "更新して\n住み続ける", fx: { assets: -10, happy: 4 }, tip: "引っ越し費用と手間を考えると、住み続けるのも合理的。更新のタイミングで家賃交渉をしてみる手も。" },
+    r: { label: "家賃の安い部屋に\n引っ越す", fx: { assets: -20, know: 3, tsumi: 1 }, tip: "家賃が月1万円下がると、年12万円。その分を積立に回せば、引っ越し代は数年で取り返せる計算です。" } },
+  { id: "points", age: [22, 55], icon: "🪙", tag: "お金", title: "ポイ活にハマった", text: "月に3,000円分くらい貯まる。",
+    l: { label: "ほどほどに\nする", fx: { happy: 4 }, tip: "時間をかけすぎると、時給に直したら安い作業になることも。「ついで」の範囲が、ちょうどいい。" },
+    r: { label: "とことん\n極める", fx: { assets: 5, happy: 3, know: 2 }, tip: "固定費の支払いをポイントの貯まる形にまとめると、手間なく年数万円になることも。小さな利回りです。" } },
+  { id: "rebalance", age: [35, 60], icon: "⚖️", tag: "投資", title: "株が増えすぎた", text: "資産の8割が株になっていた。",
+    l: { label: "そのまま\n置いておく", fx: { risk: 0.1 }, tip: "増えた株をそのままにするのも一つ。ただ、暴落のときの揺れは、割合が大きいほど大きくなります。" },
+    r: { label: "一部を預金に\n戻す", fx: { risk: -0.1, know: 5 }, tip: "増えた分の一部を安全な置き場に移す「リバランス」。年に1回の見直しで、揺れを自分の許せる大きさに保てます。" } },
+  { id: "gold", age: [30, 60], icon: "🪙", tag: "投資", title: "金が話題になっている", text: "「安全資産」と聞くけれど。",
+    l: { label: "少しだけ\n持ってみる", fx: { risk: 0.05, know: 3 }, tip: "金は利息を生みませんが、株と違う動きをすることがあります。「少し」なら、分散の一つの形です。" },
+    r: { label: "見ているだけ", fx: { know: 3 }, tip: "話題になってから買うと、高値づかみになりやすい。見ているだけ、も立派な判断です。" } },
+  { id: "tsumi_up", age: [30, 55], icon: "📈", tag: "投資", title: "積立額、上げる?", text: "少し余裕が出てきた。",
+    l: { label: "今のまま", fx: { happy: 3 }, tip: "無理のない額で続けることが、いちばん大事。余裕は、楽しみに使ってもいい。" },
+    r: { label: "上げる", fx: { tsumi: 1, happy: 2 }, tip: "余裕ができたときに上げる、が積立の自然な増やし方。昇給や固定費の削減が、そのタイミングです。" } },
+  { id: "timing", age: [25, 60], icon: "📰", tag: "投資", title: "「今は買い時じゃない」と聞いた", text: "専門家がテレビで言っていた。",
+    l: { label: "気にせず\n続ける", fx: { know: 5 }, tip: "「買い時」を当て続けられる人はいません。決めた額を決めた日に買う積立は、当てなくていい仕組みです。" },
+    r: { label: "積立を止めて\n様子を見る", fx: { tsumiMul: 0.5, know: -2 }, tip: "止めるのは簡単、再開は難しい。「様子を見る」が何年も続いた人は、少なくありません。" } },
+  { id: "commute", age: [22, 45], icon: "🚃", tag: "心", title: "通勤電車の30分", text: "毎日の過ごし方。",
+    l: { label: "株価アプリを\n眺める", fx: { know: 2, happy: -2 }, tip: "毎日見ると、毎日揺れます。長期の積立に、毎日の値動きはあまり関係ありません。" },
+    r: { label: "本や学びの\n時間にする", fx: { know: 4, happy: 3 }, tip: "片道30分を往復で1時間、年240日なら年240時間。この時間の使い方は、10年で大きな差になります。" } },
+  { id: "ideco", age: [25, 55], icon: "🧓", tag: "投資", title: "iDeCoを勧められた", text: "原則60歳まで引き出せない、と聞いた。",
+    l: { label: "NISAだけで\n十分", fx: { know: 2 }, tip: "引き出せない仕組みが合わない人もいます。課税所得がない人は掛金の所得控除の効果がないなど、人によって向き不向きがある制度です。" },
+    r: { label: "調べて\n始めてみる", fx: { tsumi: 1, know: 5 }, tip: "原則60歳まで引き出せない代わりに、税金の面で有利になることがあります。加入が遅いと受け取り開始が遅くなる点も含めて、自分の条件で確認を。" } },
 ];
 const CRASH = { id: "crash", icon: "📉", tag: "相場", title: "大暴落!", text: "株価が3割下落。ニュースは悲観一色、SNSは阿鼻叫喚。",
   l: { label: "怖い…\n全部売る", fx: { panic: 1 }, tip: "売った瞬間に損が確定します。歴史上、暴落はいつか回復してきました。売った人だけが回復を取り逃します。" },
@@ -420,19 +665,53 @@ function simulateYears(years) {
 
 // ---------- カードの選出 ----------
 let crashTurns = [];
+// 前回までのプレイで見たカード（端末に保存）。まだ見ていないカードを優先して出す
+const SEEN_KEY = "ilSeen";
+let seen = new Set();
+try { seen = new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || "[]")); } catch (e) {}
+function markSeen(id) {
+  seen.add(id);
+  // ほぼ全部見たら、いったんリセット（また新鮮な気持ちで）
+  if (seen.size >= CARDS.length - 5) seen = new Set();
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify([...seen])); } catch (e) {}
+}
+// 左右をランダムに入れ替える（「右が堅実」と読まれないように）。1プレイの間は同じ向き
+let flipped = new Set();
+function view(c) {
+  if (!flipped.has(c.id)) return c;
+  return Object.assign({}, c, { l: c.r, r: c.l });
+}
 function nextCard() {
   const age = S.age;
   if (S.turn === 0) return CARDS.find(c => c.id === "job");
   if (S.turn === 2 && !S.used.has("nisa")) return CARDS.find(c => c.id === "nisa");
   if (S.held) { S.held = false; return RECOVER; }
   if (crashTurns.includes(S.turn)) return CRASH;
-  let pool = CARDS.filter(c => !S.used.has(c.id) && age >= c.age[0] && age <= c.age[1]);
+  // 前の選択とのつながり: need=そのカードを（その側で）選んだ人だけ / avoid=その側を選んだ人には出さない
+  const picked = S.pick || {}, when = S.pickTurn || {};
+  const met = n => {
+    if (!picked[n.id]) return false;
+    if (n.side && picked[n.id] !== n.side) return false;
+    const dt = S.turn - (when[n.id] ?? 0);
+    if (n.after && dt < n.after) return false;      // そのカードから何ターンか経ってから
+    if (n.within && dt > n.within) return false;    // そのカードの直後だけ
+    return true;
+  };
+  const ok = c => {
+    if (c.need && !met(c.need)) return false;
+    if (c.needAny && !c.needAny.some(met)) return false;
+    if (c.avoid && picked[c.avoid.id] === c.avoid.side) return false;
+    if (c.group) { const n = [...S.used].filter(id => (CARDS.find(x => x.id === id) || {}).group === c.group).length; if (n >= 2) return false; }
+    return true;
+  };
+  let pool = CARDS.filter(c => !S.used.has(c.id) && age >= c.age[0] && age <= c.age[1] && ok(c));
   if (!pool.length) {
     pool = CARDS.filter(c => REPEATABLE.includes(c.id) && age >= c.age[0] && age <= c.age[1]);
     pool.forEach(c => S.used.delete(c.id));
   }
   if (!pool.length) return CALM;
-  return pick(pool);
+  const fresh = pool.filter(c => !seen.has(c.id));   // 前回までに見ていないものを優先
+  return view(pick(fresh.length ? fresh : pool));
 }
 
 // ---------- 3D の街 ----------
@@ -627,8 +906,12 @@ function choose(side) {
   cardEl.style.transition = "transform .3s, opacity .3s";
   cardEl.style.transform = `translateX(${side === "l" ? -140 : 140}%) rotate(${side === "l" ? -20 : 20}deg)`;
   cardEl.style.opacity = "0";
-  S.used.add(c.id);
-  S.history.push({ id: c.id, side });
+  S.used.add(c.id); markSeen(c.id);
+  const orig = CARDS.find(x => x.id === c.id) || c;
+  const oside = opt === orig.l ? "l" : (opt === orig.r ? "r" : side);
+  S.pick = S.pick || {}; S.pick[c.id] = oside;
+  S.pickTurn = S.pickTurn || {}; S.pickTurn[c.id] = S.turn;
+  S.history.push({ id: c.id, side: oside });
   const d = applyFx(opt.fx);
   if (opt.fx.panic || opt.fx.held) { shakeT = 1.2; S.crashes++; townEl.classList.add("crash");
     townEl.style.background = "linear-gradient(#3a1a2c 0%, #5a2438 50%, #7a3a3a 100%)";
@@ -704,7 +987,10 @@ let lastShare = "";
 function showResult() {
   const [type, comment] = typeOf();
   const bm = benchmark();
+  const R = S.res ? RESIDENTS[S.res] : null;
+  if (S.res) { album[S.res] = { type, assets: Math.round(S.assets), date: new Date().toISOString().slice(0, 10) }; saveAlbum(); }
   $("rcard").innerHTML = `
+    ${R ? `<div class="reshead"><img src="assets/residents/r-${S.res}.png" alt="">${R.emoji} ${R.name}で遊んだ人生</div>` : ""}
     <div style="font-size:12px;color:#7f90a8">あなたの投資人生 (20歳→65歳)</div>
     <div class="type">${type}</div>
     <div style="font-size:12px;color:#7f90a8;margin-top:8px">65歳時点の資産</div>
@@ -717,19 +1003,76 @@ function showResult() {
     <div class="cmp">📊 参考: 毎月3万円を45年間、年5%で淡々と積み立てた場合 → <b>${fmtMan(bm)}</b><br>
       ${S.assets >= bm ? "あなたはそれを上回りました!" : "続ける力だけで、ここまで届きます。"}</div>
     <div class="note">${comment}</div>`;
-  lastShare = `【投資人生ゲーム】\n私の投資家タイプは「${type}」\n65歳時点の資産: ${fmtMan(S.assets)}(${TIERS[tierOf(S.assets)].label})\n暴落で売った回数: ${S.panics}回\n\nあなたはどうなる? → ${location.href.split("?")[0]}`;
-  $("result").style.display = "flex";
+  const remain = RES_ORDER.filter(k => !album[k]);
+  $("nextResBtn").style.display = (S.res && remain.length) ? "inline-block" : "none";
+  $("nextResBtn").textContent = remain.length ? `次の住民で遊ぶ（あと${remain.length}匹）` : "次の住民で遊ぶ";
+  lastShare = `【投資人生ゲーム${R ? "・" + R.emoji + R.name + "で遊んだ" : ""}】\n私の投資家タイプは「${type}」\n65歳時点の資産: ${fmtMan(S.assets)}(${TIERS[tierOf(S.assets)].label})\n暴落で売った回数: ${S.panics}回\n\nあなたはどうなる? → ${location.href.split("?")[0]}`;
+  $("result").style.display = "flex"; $("quitBtn").style.display = "none";
 }
 $("shareBtn").onclick = async () => {
   try { if (navigator.share) { await navigator.share({ text: lastShare }); return; } } catch (e) {}
   try { await navigator.clipboard.writeText(lastShare); $("shareBtn").textContent = "コピーしました ✓"; } catch (e) { prompt("コピーしてシェアしてください", lastShare); }
 };
 $("againBtn").onclick = () => { $("result").style.display = "none"; startGame(); };
-$("startBtn").onclick = () => { $("title").style.display = "none"; startGame(); };
+$("startBtn").onclick = () => { chosenRes = null; startGame(); };
+function renderPick() {
+  const g = $("rgrid"); g.innerHTML = ""; const you = diagnosedRes();
+  RES_ORDER.forEach(k => {
+    const r = RESIDENTS[k], d = document.createElement("div");
+    d.className = "rc" + (k === you ? " sel" : "");
+    d.innerHTML = `${k === you ? '<span class="you">診断のあなた</span>' : ""}${album[k] ? '<span class="ok">✅</span>' : ""}
+      <img src="assets/residents/r-${k}.png" alt=""><b>${r.emoji} ${r.name}</b><small>${r.title}</small><small>${r.trait}</small>`;
+    d.onclick = () => { chosenRes = k; $("pick").style.display = "none"; $("result").style.display = "none"; startGame(); };
+    g.appendChild(d);
+  });
+}
+function renderAlbum() {
+  const g = $("agrid"); g.innerHTML = "";
+  RES_ORDER.forEach(k => {
+    const r = RESIDENTS[k], a = album[k], d = document.createElement("div");
+    d.className = "rc" + (a ? "" : " dim");
+    d.innerHTML = `<img src="assets/residents/r-${k}.png" alt=""><b>${r.emoji} ${r.name}</b>` +
+      (a ? `<small>${a.type}</small><small><b>${fmtMan(a.assets)}</b></small>` : `<small>まだ遊んでいません</small>`);
+    d.style.cursor = "default";
+    g.appendChild(d);
+  });
+  const n = RES_ORDER.filter(k => album[k]).length;
+  $("albumN").textContent = n ? `${n}/6` : "";
+}
+$("pickBtn").onclick = () => { renderPick(); $("pick").style.display = "flex"; };
+$("pickClose").onclick = () => { $("pick").style.display = "none"; if ($("title").style.display === "none" && !current) enterTitle(); };
+$("albumBtn").onclick = () => { renderAlbum(); $("album").style.display = "flex"; };
+$("albumClose").onclick = () => { $("album").style.display = "none"; };
+$("nextResBtn").onclick = () => { $("result").style.display = "none"; renderPick(); $("pick").style.display = "flex"; };
+$("quitBtn").onclick = () => {
+  if (!confirm("途中でやめて、はじめの画面にもどりますか？" + String.fromCharCode(10) + "（この人生の記録は残りません）")) return;
+  current = null; $("quitBtn").style.display = "none"; $("result").style.display = "none";
+  enterTitle();
+};
+renderAlbum();
 $("aboutBtn").onclick = () => { $("about").style.display = "flex"; };
 $("aboutClose").onclick = () => { $("about").style.display = "none"; };
 
+// ---------- タイトル: 街が自動で育つデモ ----------
+let demoTimer = 0, demoTier = -1;
+function enterTitle() {
+  const app = document.getElementById("app");
+  if (!app.classList.contains("title-mode")) { app.classList.add("title-mode"); setTimeout(resize3D, 50); }
+  $("title").style.display = "flex"; renderAlbum();
+  if (demoTimer) return;
+  demoTier = -1;
+  const step = () => { demoTier = (demoTier + 1) % TIERS.length; rebuildTown(demoTier); setGrass(Math.min(1, demoTier / 4)); setSky(ageAt(Math.round(TURNS * demoTier / (TIERS.length - 1)))); };
+  step(); demoTimer = setInterval(step, 2800);
+}
+function leaveTitle() {
+  if (demoTimer) { clearInterval(demoTimer); demoTimer = 0; }
+  document.getElementById("app").classList.remove("title-mode");
+  $("title").style.display = "none"; setTimeout(resize3D, 50);
+}
 function startGame() {
+  leaveTitle();
+  $("quitBtn").style.display = "inline-block";
+  flipped = new Set(CARDS.filter(() => Math.random() < 0.5).map(c => c.id));
   S = newState();
   crashTurns = [Math.floor(rand(5, 10)), Math.floor(rand(13, 19))];
   $("shareBtn").textContent = "結果をシェア";
@@ -740,6 +1083,7 @@ function startGame() {
 
 init3D();
 S = newState(); updateHud();
+enterTitle();
 window.__game = { get S() { return S; }, choose, advance, startGame, showResult, get current() { return current; }, get tier() { return tier; }, CARDS };
 </script>
 </body>
