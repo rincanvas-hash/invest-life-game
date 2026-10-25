@@ -163,11 +163,26 @@
   .reshead img { width: 30px; height: 30px; }
   .ovh2 { font-size: 20px; margin: 0 0 4px; }
   .ovsub { font-size: 13px; color: #4a5a72; margin: 0 0 6px; line-height: 1.6; }
+  /* ---- 今週の相場チャレンジ（assets/weekly.js を毎週差し替え） ---- */
+  #weeklyBtn { border-color: #e8c76a; background: linear-gradient(180deg, #fff, #fff6d0); display: none; }
+  #weeklyBtn.off { opacity: .62; }
+  #weeklyBtn .badge { display: none; font-size: 11px; background: var(--gold); color: #fff; border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: middle; font-weight: 700; }
+  #wkHead { display: none; font-size: 12px; color: var(--muted); line-height: 1.3; text-align: left; }
+  #wkHead b { display: block; font-size: 15px; color: var(--ink); }
+  #app.weekly-mode #hud .age, #app.weekly-mode #hud .assets, #app.weekly-mode .meter.tsumi { display: none; }
+  #app.weekly-mode #wkHead { display: block; }
+  #app.weekly-mode #hud { align-items: center; }
+  .card .after { font-size: 13px; color: #6a5a2a; background: rgba(255,255,255,.65); border-radius: 8px; padding: 6px 8px; margin-top: 6px; flex-shrink: 0; line-height: 1.5; }
+  .card.intro .next { margin-top: 10px; border: 0; border-radius: 12px; padding: 12px; font-size: 15px; font-weight: 700; background: var(--accent); color: #fff; cursor: pointer; flex-shrink: 0; }
+  #wresult { display: none; overflow-y: auto; justify-content: flex-start; padding-top: max(24px, env(safe-area-inset-top)); z-index: 11; }
+  .rcard .picks { font-size: 13px; line-height: 1.6; color: #3b4a60; margin-top: 12px; }
+  .rcard .picks div { padding: 4px 0; border-bottom: 1px dashed #dfe3ea; }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="hud">
+    <div id="wkHead"><b id="wkTitle"></b><span id="wkProg"></span></div>
     <div class="age">現在 <b id="age">20</b> 歳</div>
     <button id="quitBtn">✕ やめる</button>
     <div class="assets"><small>資産</small><b id="assets">30万円</b></div>
@@ -197,6 +212,11 @@
       <span class="ic">🦊</span>
       <span><b>住民から選ぶ</b><small>スタート条件がちがう6匹。全員の人生を集めよう</small>
         <span class="faces"><img src="assets/residents/r-G.png" alt=""><img src="assets/residents/r-L.png" alt=""><img src="assets/residents/r-S.png" alt=""><img src="assets/residents/r-K.png" alt=""><img src="assets/residents/r-T.png" alt=""><img src="assets/residents/r-B.png" alt=""></span></span>
+      <span class="go">›</span>
+    </button>
+    <button class="choice" id="weeklyBtn">
+      <span class="ic">📰</span>
+      <span><b>今週の相場チャレンジ<span class="badge" id="wkBadge"></span></b><small id="weeklySub"></small></span>
       <span class="go">›</span>
     </button>
     <div class="links"><button id="albumBtn">🏡 人生アルバム <span id="albumN"></span></button>・<button id="aboutBtn">このゲームについて</button></div>
@@ -242,6 +262,17 @@
       <button class="ghost" id="againBtn">もう一度</button>
     </div>
     <div class="fine">※ゲームの結果です。将来の成果を示すものではありません。</div>
+  </div>
+
+  <div class="overlay" id="wresult">
+    <div class="rcard" id="wrcard"></div>
+    <div style="margin-top:14px">
+      <button id="wShareBtn">結果をシェア</button>
+      <button class="alt" id="wLifeBtn">投資人生ゲームで遊ぶ</button>
+      <button class="ghost" id="wAgainBtn">もう一度</button>
+      <button class="ghost" id="wBackBtn">はじめの画面へ</button>
+    </div>
+    <div class="fine" id="wkNote"></div>
   </div>
 </div>
 
@@ -900,6 +931,7 @@ function showCard(c) {
 }
 function choose(side) {
   if (!current) return;
+  if (weeklyOn) return wkChoose(side);      // 今週の相場チャレンジ中はそちらへ
   const opt = current[side];
   const c = current; current = null;
   sSwipe();
@@ -939,6 +971,7 @@ function showTip(c, opt, d) {
   requestAnimationFrame(() => { cardEl.style.transition = "transform .25s"; cardEl.style.transform = "scale(1)"; });
 }
 function advance() {
+  if (weeklyOn) return wkAdvance();
   if (!canAdvance) return;                  // 二重タップで2ターン進まないように
   canAdvance = false;
   const years = ageAt(S.turn + 1) - S.age;
@@ -1006,7 +1039,7 @@ function showResult() {
   const remain = RES_ORDER.filter(k => !album[k]);
   $("nextResBtn").style.display = (S.res && remain.length) ? "inline-block" : "none";
   $("nextResBtn").textContent = remain.length ? `次の住民で遊ぶ（あと${remain.length}匹）` : "次の住民で遊ぶ";
-  lastShare = `【投資人生ゲーム${R ? "・" + R.emoji + R.name + "で遊んだ" : ""}】\n私の投資家タイプは「${type}」\n65歳時点の資産: ${fmtMan(S.assets)}(${TIERS[tierOf(S.assets)].label})\n暴落で売った回数: ${S.panics}回\n\nあなたはどうなる? → ${location.href.split("?")[0]}`;
+  lastShare = `【投資人生ゲーム${R ? "・" + R.emoji + R.name + "で遊んだ" : ""}】\n私の投資家タイプは「${type}」\n65歳時点の資産: ${fmtMan(S.assets)}(${TIERS[tierOf(S.assets)].label})\n暴落で売った回数: ${S.panics}回\n\nあなたはどうなる? → ${BASE_URL}`;
   $("result").style.display = "flex"; $("quitBtn").style.display = "none";
 }
 $("shareBtn").onclick = async () => {
@@ -1045,7 +1078,8 @@ $("albumBtn").onclick = () => { renderAlbum(); $("album").style.display = "flex"
 $("albumClose").onclick = () => { $("album").style.display = "none"; };
 $("nextResBtn").onclick = () => { $("result").style.display = "none"; renderPick(); $("pick").style.display = "flex"; };
 $("quitBtn").onclick = () => {
-  if (!confirm("途中でやめて、はじめの画面にもどりますか？" + String.fromCharCode(10) + "（この人生の記録は残りません）")) return;
+  const msg = weeklyOn ? "チャレンジを途中でやめて、はじめの画面にもどりますか？" : "途中でやめて、はじめの画面にもどりますか？" + String.fromCharCode(10) + "（この人生の記録は残りません）";
+  if (!confirm(msg)) return;
   current = null; $("quitBtn").style.display = "none"; $("result").style.display = "none";
   enterTitle();
 };
@@ -1056,6 +1090,8 @@ $("aboutClose").onclick = () => { $("about").style.display = "none"; };
 // ---------- タイトル: 街が自動で育つデモ ----------
 let demoTimer = 0, demoTier = -1;
 function enterTitle() {
+  if (weeklyOn) exitWeekly();
+  refreshWeeklyBtn();
   const app = document.getElementById("app");
   if (!app.classList.contains("title-mode")) { app.classList.add("title-mode"); setTimeout(resize3D, 50); }
   $("title").style.display = "flex"; renderAlbum();
@@ -1081,10 +1117,172 @@ function startGame() {
   showCard(nextCard());
 }
 
+// ============================================================
+// 今週の相場チャレンジ — assets/weekly.js（朝刊チャットが毎週作るデータ）だけで動く
+// ============================================================
+const NL = String.fromCharCode(10);
+const BASE_URL = location.origin + location.pathname;
+const WK_KEY = "ilWeekly";
+let WK = null, wkStatus = "none", weeklyOn = false, W = null, lastWShare = "", wkHashDone = false;
+let wkDone = {};
+try { wkDone = JSON.parse(localStorage.getItem(WK_KEY) || "{}"); } catch (e) {}
+function ymd(s) { const p = String(s || "").split("-").map(Number); return (p.length === 3 && !p.some(isNaN)) ? new Date(p[0], p[1] - 1, p[2]) : null; }   // 日本時間の0時として読む
+function mdLabel(s) { const d = ymd(s); return d ? `${d.getMonth() + 1}/${d.getDate()}(${"日月火水木金土"[d.getDay()]})` : ""; }
+function loadWeekly() {
+  const d = new Date(), stamp = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  const sc = document.createElement("script");
+  sc.src = "assets/weekly.js?d=" + stamp;          // 日付つきで読むので、index.html を直さなくても新しい週のファイルが読まれる
+  sc.onload = () => { try { setupWeekly(typeof WEEKLY !== "undefined" ? WEEKLY : null); } catch (e) { console.warn("weekly.js", e); setupWeekly(null); } };
+  sc.onerror = () => setupWeekly(null);
+  document.head.appendChild(sc);
+}
+function setupWeekly(w) {
+  const btn = $("weeklyBtn");
+  const ok = w && Array.isArray(w.questions) && w.questions.length > 0 && ymd(w.from) && ymd(w.to) &&
+    w.questions.every(q => q && q.title && q.l && q.r && q.l.label && q.r.label);
+  if (!ok) { WK = null; wkStatus = "none"; btn.style.display = "none"; return; }
+  WK = w;
+  const now = new Date(), from = ymd(w.from), end = ymd(w.to); end.setDate(end.getDate() + 1);   // to の日の24時まで
+  const n = w.questions.length;
+  if (now < from) { wkStatus = "soon"; $("weeklySub").textContent = `${mdLabel(w.from)} から始まります・${n}問・約1分`; }
+  else if (now < end) { wkStatus = "open"; $("weeklySub").textContent = `${w.title}・${n}問・約1分・${mdLabel(w.to)}まで`; }
+  else if (now - end < 14 * 864e5) { wkStatus = "ended"; $("weeklySub").textContent = `${w.title} は終了しました。次の週は土曜から`; }
+  else { wkStatus = "none"; btn.style.display = "none"; return; }   // 2週間以上ほったらかしなら入口ごと隠す
+  btn.classList.toggle("off", wkStatus !== "open");
+  const done = wkDone[w.id];
+  $("wkBadge").style.display = (done && wkStatus === "open") ? "inline-block" : "none";
+  if (done) $("wkBadge").textContent = `✅ 知識 ${done.know > 0 ? "+" : ""}${done.know}`;
+  btn.style.display = "flex";
+  if (!wkHashDone && location.hash === "#weekly") {      // 投稿からの直リンク
+    wkHashDone = true; history.replaceState(null, "", BASE_URL);
+    if (wkStatus === "open") startWeekly();
+    else toast(wkStatus === "soon" ? `📰 相場チャレンジは ${mdLabel(w.from)} から` : "📰 今週の相場チャレンジは終了しました", 3200);
+  }
+}
+function refreshWeeklyBtn() { if (WK) setupWeekly(WK); }
+function wkTown() {
+  const n = WK.questions.length, t = Math.min(TIERS.length - 1, Math.round(W.i / n * (TIERS.length - 1)));
+  if (t !== tier) { tier = t; rebuildTown(t); }
+  setGrass(Math.min(1, W.i / n)); setSky(40);
+}
+function wkHud() {
+  const n = WK.questions.length;
+  $("wkProg").textContent = W.i < n ? `問 ${W.i + 1} / ${n}` : `${n}問 おつかれさま`;
+  $("mHappy").style.width = clamp(50 + W.happy * 2.5, 0, 100) + "%";
+  $("mKnow").style.width = clamp(50 + W.know * 2.5, 0, 100) + "%";
+  $("progBar").style.width = (W.i / n * 100) + "%";
+}
+function startWeekly() {
+  if (!WK || wkStatus !== "open") return;
+  leaveTitle();
+  $("wresult").style.display = "none"; $("result").style.display = "none";
+  weeklyOn = true; document.getElementById("app").classList.add("weekly-mode");
+  $("quitBtn").style.display = "inline-block";
+  W = { i: 0, happy: 0, know: 0, picks: [] };
+  $("wkTitle").textContent = "📰 " + WK.title;
+  $("wShareBtn").textContent = "結果をシェア";
+  tier = -1; grassN = -1; wkTown(); wkHud();
+  wkIntro();
+}
+function wkIntro() {
+  current = null; canAdvance = false;
+  cardEl.className = "card intro"; cardEl.onclick = null;
+  cardEl.style.transition = "none"; cardEl.style.transform = "translateY(40px) scale(.9)";
+  cardEl.innerHTML = `<div class="icon">📰</div><h2>${WK.title}</h2><p>${WK.intro || ""}</p>
+    <div class="after">実際のニュースをもとにした振り返りです。正解はありません。選んだあとの解説をお楽しみください。</div>
+    <button class="next">はじめる（${WK.questions.length}問）</button>`;
+  cardEl.querySelector(".next").onclick = () => { cardEl.style.transition = "none"; cardEl.style.transform = "translateY(40px) scale(.9)"; wkShow(); };
+  $("hintL").textContent = ""; $("hintR").textContent = "";
+  requestAnimationFrame(() => { cardEl.style.transition = "transform .35s"; cardEl.style.transform = "translateY(0) scale(1)"; });
+}
+function wkShow() {
+  const q = WK.questions[W.i];
+  showCard({ id: "wk" + W.i, tag: `問 ${W.i + 1} / ${WK.questions.length}`, icon: q.icon || "📰", title: q.title, text: q.text || "", l: q.l, r: q.r });
+  wkHud();
+}
+function wkChoose(side) {
+  const c = current, opt = c[side]; current = null;
+  sSwipe();
+  cardEl.style.transition = "transform .3s, opacity .3s";
+  cardEl.style.transform = `translateX(${side === "l" ? -140 : 140}%) rotate(${side === "l" ? -20 : 20}deg)`;
+  cardEl.style.opacity = "0";
+  const fx = opt.fx || {}, dh = clamp(Math.round(+fx.happy || 0), -3, 3), dk = clamp(Math.round(+fx.know || 0), -3, 3);
+  W.happy += dh; W.know += dk;
+  W.picks.push({ title: c.title, label: String(opt.label).split(NL).join("") });
+  setTimeout(() => { cardEl.style.transition = "none"; cardEl.style.opacity = "1"; wkTip(c, opt, dh, dk); }, 300);
+}
+function wkTip(c, opt, dh, dk) {
+  const q = WK.questions[W.i], last = W.i + 1 >= WK.questions.length;
+  cardEl.className = "card tip"; cardEl.style.transform = "scale(.96)";
+  const sign = v => (v > 0 ? "+" : "") + v, parts = [];
+  if (dh) parts.push(`<span>😊 ${sign(dh)}</span>`);
+  if (dk) parts.push(`<span>📚 ${sign(dk)}</span>`);
+  cardEl.innerHTML = `<div class="icon">💡</div><h2>${c.title} → 「${String(opt.label).split(NL).join("")}」</h2><p>${opt.tip || ""}</p>
+    ${q.after ? `<div class="after">📅 その後: ${q.after}</div>` : ""}
+    <div class="delta">${parts.join("") || "<span>変化なし</span>"}</div><button class="next">${last ? "結果を見る" : "次へ"}</button>
+    <div class="tapHint">カードのどこをタップしても進みます</div>`;
+  canAdvance = true;
+  cardEl.querySelector(".next").onclick = e => { e.stopPropagation(); advance(); };
+  cardEl.onclick = advance;
+  wkHud();
+  requestAnimationFrame(() => { cardEl.style.transition = "transform .25s"; cardEl.style.transform = "scale(1)"; });
+}
+function wkAdvance() {
+  if (!canAdvance) return; canAdvance = false;
+  W.i++; wkTown(); wkHud();
+  if (W.i >= WK.questions.length) { confetti(); sUpgrade(); setTimeout(wkResult, 500); return; }
+  cardEl.style.transition = "none"; cardEl.style.transform = "translateY(40px) scale(.9)";
+  wkShow();
+}
+function wkResult() {
+  const n = WK.questions.length, sign = v => (v > 0 ? "+" : "") + v;
+  const maxK = WK.questions.reduce((s, q) => s + Math.max(0, +(q.l.fx || {}).know || 0, +(q.r.fx || {}).know || 0), 0);
+  const r = maxK ? W.know / maxK : 1;
+  const comment = r >= 0.8 ? "🎓 今週のニュース、ほぼ全部を自分の言葉で言えそうです。朝刊の読み方が変わってきたかもしれません。"
+    : r >= 0.5 ? "📖 気になった場面には、ちゃんと一歩ふみこめています。毎週続けると、知識の芯ができていきます。"
+    : "☕ マイペースに相場をながめた週。知らない言葉が出てきたら、朝刊でひとつずつ拾えば大丈夫です。";
+  const happyNote = W.happy < 0 ? "<br>😊 しあわせが少し下がったのは、ニュースに気持ちが揺れたサイン。揺れるのは自然なことです。" : "";
+  wkDone[WK.id] = { know: W.know, happy: W.happy, date: new Date().toISOString().slice(0, 10) };
+  try { localStorage.setItem(WK_KEY, JSON.stringify(wkDone)); } catch (e) {}
+  $("wrcard").innerHTML = `
+    <div style="font-size:12px;color:#7f90a8">📰 今週の相場チャレンジ</div>
+    <div class="type">${WK.title}</div>
+    <div style="font-size:12px;color:#7f90a8;margin-top:8px">今週ふやした知識</div>
+    <div class="big">📚 ${sign(W.know)}</div>
+    <div class="row"><span>😊 しあわせ</span><b>${sign(W.happy)}</b></div>
+    <div class="row"><span>答えた場面</span><b>${n}問</b></div>
+    <div class="note">${comment}${happyNote}</div>
+    <div class="picks"><b style="font-size:12px;color:#7f90a8">あなたの選択</b>${W.picks.map((p, i) => `<div>${i + 1}. ${p.title} → ${p.label}</div>`).join("")}</div>`;
+  $("wkNote").textContent = WK.note || "※実際のニュースをもとにした振り返りです。投資をすすめるものではありません。";
+  lastWShare = [`【今週の相場チャレンジ】${WK.title}`, `📚 知識 ${sign(W.know)}　😊 しあわせ ${sign(W.happy)}`,
+    `${n}つの場面で「私ならこうする」を選びました。`, "#今週の相場チャレンジ #投資人生ゲーム", `あなたならどうする? → ${BASE_URL}#weekly`].join(NL);
+  $("wresult").style.display = "flex"; $("quitBtn").style.display = "none";
+}
+function exitWeekly() {
+  weeklyOn = false; W = null; current = null; canAdvance = false;
+  document.getElementById("app").classList.remove("weekly-mode");
+  $("wresult").style.display = "none"; $("quitBtn").style.display = "none";
+  tier = -1; grassN = -1;
+}
+$("weeklyBtn").onclick = () => {
+  if (wkStatus === "open") startWeekly();
+  else if (wkStatus === "soon") toast(`📰 ${mdLabel(WK.from)} から始まります`, 2600);
+  else toast("📰 今週分は終了しました。次の週は土曜から", 2600);
+};
+$("wShareBtn").onclick = async () => {
+  try { if (navigator.share) { await navigator.share({ text: lastWShare }); return; } } catch (e) {}
+  try { await navigator.clipboard.writeText(lastWShare); $("wShareBtn").textContent = "コピーしました ✓"; } catch (e) { prompt("コピーしてシェアしてください", lastWShare); }
+};
+$("wAgainBtn").onclick = () => startWeekly();
+$("wLifeBtn").onclick = () => { exitWeekly(); chosenRes = null; startGame(); };
+$("wBackBtn").onclick = () => { exitWeekly(); enterTitle(); };
+
 init3D();
 S = newState(); updateHud();
 enterTitle();
-window.__game = { get S() { return S; }, choose, advance, startGame, showResult, get current() { return current; }, get tier() { return tier; }, CARDS };
+loadWeekly();
+window.__game = { get S() { return S; }, choose, advance, startGame, showResult, get current() { return current; }, get tier() { return tier; }, CARDS,
+  startWeekly, setupWeekly, get W() { return W; }, get WK() { return WK; }, get wkStatus() { return wkStatus; }, get lastWShare() { return lastWShare; }, get lastShare() { return lastShare; } };
 </script>
 </body>
 </html>
